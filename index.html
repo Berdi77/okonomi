@@ -269,9 +269,358 @@ tailwind.config = {
   .gc-btn:hover { background: rgba(255,255,255,.1); }
   .gc-btn.primary { background: rgba(34,211,238,.1); border-color: rgba(34,211,238,.25); color: #67e8f9; }
   .gc-btn.primary:hover { background: rgba(34,211,238,.18); }
+
+  /* ══════════════════════════════════════════
+     VISUAL GIMMICKS & EFFECTS
+     ══════════════════════════════════════════ */
+
+  /* Aurora / Northern Lights background */
+  .aurora-wrap {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+    opacity: var(--aurora-opacity, .45);
+    transition: opacity 1s ease;
+  }
+  .aurora-blob {
+    position: absolute; border-radius: 50%; filter: blur(100px);
+    mix-blend-mode: screen;
+    animation: auroraFloat 12s ease-in-out infinite alternate;
+  }
+  .aurora-blob:nth-child(1) {
+    width: 600px; height: 300px; top: -10%; left: -5%;
+    background: radial-gradient(ellipse, rgba(34,211,238,.25), transparent 70%);
+    animation-duration: 14s;
+  }
+  .aurora-blob:nth-child(2) {
+    width: 500px; height: 250px; top: 30%; right: -10%;
+    background: radial-gradient(ellipse, rgba(139,92,246,.2), transparent 70%);
+    animation-duration: 18s; animation-delay: -4s;
+  }
+  .aurora-blob:nth-child(3) {
+    width: 700px; height: 350px; bottom: -15%; left: 20%;
+    background: radial-gradient(ellipse, rgba(163,230,53,.12), transparent 70%);
+    animation-duration: 16s; animation-delay: -8s;
+  }
+  .aurora-blob:nth-child(4) {
+    width: 400px; height: 200px; top: 50%; left: 50%;
+    background: radial-gradient(ellipse, rgba(251,113,133,.1), transparent 70%);
+    animation-duration: 20s; animation-delay: -12s;
+  }
+  @keyframes auroraFloat {
+    0%   { transform: translate(0, 0) scale(1) rotate(0deg); }
+    33%  { transform: translate(60px, -40px) scale(1.15) rotate(5deg); }
+    66%  { transform: translate(-40px, 30px) scale(.9) rotate(-3deg); }
+    100% { transform: translate(30px, -20px) scale(1.08) rotate(2deg); }
+  }
+
+  /* Cursor glow trail */
+  #cursorGlow {
+    position: fixed; pointer-events: none; z-index: 9999;
+    width: 300px; height: 300px; border-radius: 50%;
+    background: radial-gradient(circle, var(--cursor-glow, rgba(34,211,238,.06)), transparent 70%);
+    transform: translate(-50%, -50%);
+    transition: opacity .3s;
+    opacity: 0;
+  }
+  body:hover #cursorGlow { opacity: 1; }
+
+  /* Card hover lift + glow */
+  .glass {
+    transition: transform .3s cubic-bezier(.34,1.56,.64,1), box-shadow .3s ease, border-color .3s ease !important;
+  }
+  .glass:hover {
+    transform: translateY(-2px) scale(1.005);
+    box-shadow: 0 12px 40px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.07), 0 0 30px var(--card-glow, rgba(34,211,238,.05)) !important;
+  }
+
+  /* Animated gradient border on stat cards */
+  @property --angle {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
+  }
+  .stat-stripe {
+    transition: transform .3s cubic-bezier(.34,1.56,.64,1), box-shadow .3s;
+  }
+  .stat-stripe:hover {
+    transform: translateY(-4px) scale(1.02);
+  }
+  .stat-stripe::before {
+    background: linear-gradient(var(--angle), var(--stripe-color, #22d3ee), #8b5cf6, var(--stripe-color, #22d3ee)) !important;
+    animation: borderSpin 3s linear infinite;
+    height: 3px !important;
+  }
+  @keyframes borderSpin {
+    to { --angle: 360deg; }
+  }
+
+  /* Pulsing glow on important numbers */
+  .pulse-value {
+    animation: pulseGlow 3s ease-in-out infinite;
+  }
+  @keyframes pulseGlow {
+    0%, 100% { text-shadow: 0 0 0 transparent; }
+    50% { text-shadow: 0 0 20px var(--pulse-color, rgba(34,211,238,.3)); }
+  }
+
+  /* 3D page transition */
+  .page-section {
+    animation: pageFlipIn .5s cubic-bezier(.34,1.56,.64,1) both !important;
+  }
+  @keyframes pageFlipIn {
+    from { opacity: 0; transform: perspective(800px) rotateX(4deg) translateY(20px) scale(.97); }
+    to { opacity: 1; transform: perspective(800px) rotateX(0) translateY(0) scale(1); }
+  }
+
+  /* Nav item enhanced animation */
+  .nav-item {
+    position: relative; overflow: hidden;
+  }
+  .nav-item::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.04), transparent);
+    transform: translateX(-100%);
+    transition: transform .5s ease;
+  }
+  .nav-item:hover::after {
+    transform: translateX(100%);
+  }
+  .nav-item.active {
+    box-shadow: 0 0 20px rgba(34,211,238,.08);
+  }
+
+  /* Theme toggle */
+  .theme-bar {
+    display: flex; gap: 4px; padding: 4px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: 14px;
+  }
+  .theme-btn {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    padding: 6px; border-radius: 10px; font-size: 14px;
+    cursor: pointer; transition: all .25s ease;
+    border: 1.5px solid transparent;
+    background: transparent;
+  }
+  .theme-btn:hover { background: rgba(255,255,255,.06); }
+  .theme-btn.active-theme {
+    background: rgba(34,211,238,.12);
+    border-color: rgba(34,211,238,.3);
+    box-shadow: 0 0 12px rgba(34,211,238,.15);
+  }
+
+  /* Confetti */
+  .confetti-piece {
+    position: fixed; z-index: 10000; pointer-events: none;
+    width: 8px; height: 12px; border-radius: 2px;
+    animation: confettiFall 2.5s ease-in forwards;
+  }
+  @keyframes confettiFall {
+    0%   { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(1440deg) scale(.3); opacity: 0; }
+  }
+
+  /* Floating particles */
+  .particle {
+    position: fixed; pointer-events: none; z-index: 1;
+    border-radius: 50%;
+    opacity: 0;
+    animation: particleFloat linear infinite;
+  }
+  @keyframes particleFloat {
+    0%   { transform: translateY(100vh) translateX(0); opacity: 0; }
+    10%  { opacity: .6; }
+    90%  { opacity: .6; }
+    100% { transform: translateY(-10vh) translateX(var(--drift, 50px)); opacity: 0; }
+  }
+
+  /* Status ribbon shimmer */
+  #statusEl {
+    position: relative; overflow: hidden;
+  }
+  #statusEl::after {
+    content: '';
+    position: absolute; top: 0; left: -100%; width: 60%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.06), transparent);
+    animation: shimmer 4s ease-in-out infinite;
+  }
+  @keyframes shimmer {
+    0%, 100% { left: -100%; }
+    50% { left: 150%; }
+  }
+
+  /* Sidebar active glow line */
+  .nav-item.active::before {
+    content: '';
+    position: absolute; left: 0; top: 25%; bottom: 25%;
+    width: 3px; border-radius: 0 3px 3px 0;
+    background: linear-gradient(180deg, #22d3ee, #8b5cf6);
+    box-shadow: 0 0 12px rgba(34,211,238,.4);
+    animation: glowPulse 2s ease-in-out infinite;
+  }
+  @keyframes glowPulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 12px rgba(34,211,238,.4); }
+    50% { opacity: .7; box-shadow: 0 0 20px rgba(34,211,238,.6); }
+  }
+
+  /* Hero card breathing border */
+  .hero-breathe {
+    animation: heroBreath 4s ease-in-out infinite;
+  }
+  @keyframes heroBreath {
+    0%, 100% { box-shadow: 0 8px 40px rgba(34,211,238,.08), inset 0 1px 0 rgba(255,255,255,.07); }
+    50% { box-shadow: 0 8px 50px rgba(34,211,238,.16), inset 0 1px 0 rgba(255,255,255,.1), 0 0 60px rgba(34,211,238,.05); }
+  }
+
+  /* Modal enhanced */
+  .modal-panel.open {
+    animation: modalPop .45s cubic-bezier(.34,1.56,.64,1) both;
+  }
+  @keyframes modalPop {
+    from { opacity: 0; transform: translate(-50%, -50%) scale(.8) rotateX(8deg); }
+    to { opacity: 1; transform: translate(-50%, -50%) scale(1) rotateX(0); }
+  }
+
+  /* Number flip animation */
+  .num-flip {
+    display: inline-block;
+    animation: numFlip .4s cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes numFlip {
+    0% { transform: translateY(-8px) scale(.95); opacity: .5; }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
+  }
+
+  /* ── LIGHT THEME ────────────────────── */
+  body.theme-light {
+    background: #f4f6fb !important;
+    color: #1a1a2e !important;
+  }
+  body.theme-light html, .theme-light { background: #f4f6fb !important; }
+  .theme-light .amb { opacity: .3; }
+  .theme-light .aurora-wrap { --aurora-opacity: .2; }
+  .theme-light #cursorGlow { --cursor-glow: rgba(34,211,238,.04); }
+  .theme-light .glass {
+    background: linear-gradient(145deg, rgba(255,255,255,.85), rgba(240,245,255,.9)) !important;
+    border-color: rgba(0,0,0,.08) !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,.06), inset 0 1px 0 rgba(255,255,255,.9) !important;
+  }
+  .theme-light .glass:hover {
+    box-shadow: 0 8px 30px rgba(0,0,0,.1), inset 0 1px 0 rgba(255,255,255,.9), 0 0 20px rgba(34,211,238,.05) !important;
+  }
+  .theme-light aside {
+    background: rgba(255,255,255,.85) !important;
+    border-color: rgba(0,0,0,.08) !important;
+    backdrop-filter: blur(20px) saturate(1.2) !important;
+  }
+  .theme-light .nav-item { color: #64748b; }
+  .theme-light .nav-item:hover { background: rgba(0,0,0,.04); color: #1a1a2e; }
+  .theme-light .nav-item.active { background: rgba(34,211,238,.08); color: #0891b2; border-color: rgba(34,211,238,.2); }
+  .theme-light .text-ink, .theme-light .text-ink\/90 { color: #1a1a2e !important; }
+  .theme-light .text-ink2, .theme-light .text-ink3 { color: #64748b !important; }
+  .theme-light .text-ink4 { color: #94a3b8 !important; }
+  .theme-light .field-inp {
+    background: rgba(0,0,0,.04) !important;
+    border-color: rgba(0,0,0,.1) !important;
+    color: #1a1a2e !important;
+  }
+  .theme-light .field-inp::placeholder { color: #94a3b8 !important; }
+  .theme-light .exp-field { background: rgba(0,0,0,.03) !important; }
+  .theme-light .exp-field:focus-within { background: rgba(34,211,238,.06) !important; }
+  .theme-light .exp-inp { color: #1a1a2e !important; }
+  .theme-light .pill { color: #64748b; background: rgba(0,0,0,.04); border-color: rgba(0,0,0,.08); }
+  .theme-light .pill.active { background: rgba(34,211,238,.1); border-color: rgba(34,211,238,.25); color: #0891b2; }
+  .theme-light .trow { border-color: rgba(0,0,0,.05); }
+  .theme-light .trow:hover { background: rgba(0,0,0,.02); }
+  .theme-light .trow.alt { background: rgba(0,0,0,.015); }
+  .theme-light .trow.foot { background: rgba(0,0,0,.04); border-color: rgba(0,0,0,.06); }
+  .theme-light #omsInp { color: #1a1a2e !important; }
+  .theme-light .border-white\/\[\.06\], .theme-light .border-white\/\[\.07\], .theme-light .border-white\/\[\.08\] {
+    border-color: rgba(0,0,0,.07) !important;
+  }
+  .theme-light .bg-white\/\[\.04\], .theme-light .bg-white\/\[\.05\], .theme-light .bg-white\/\[\.06\] {
+    background: rgba(0,0,0,.04) !important;
+  }
+  .theme-light ::-webkit-scrollbar-thumb { background: rgba(0,0,0,.12); }
+  .theme-light ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,.2); }
+
+  /* ── CYBERPUNK THEME ────────────────── */
+  body.theme-cyber {
+    background: #0a0015 !important;
+    --cursor-glow: rgba(255,0,128,.06);
+    --card-glow: rgba(255,0,128,.08);
+  }
+  .theme-cyber .amb {
+    background: radial-gradient(ellipse 70% 45% at 5% 10%, rgba(255,0,128,.1) 0%, transparent 50%),
+      radial-gradient(ellipse 55% 35% at 95% 85%, rgba(0,255,200,.07) 0%, transparent 50%),
+      radial-gradient(ellipse 40% 50% at 55% 50%, rgba(255,200,0,.04) 0%, transparent 60%) !important;
+  }
+  .theme-cyber .aurora-blob:nth-child(1) { background: radial-gradient(ellipse, rgba(255,0,128,.3), transparent 70%) !important; }
+  .theme-cyber .aurora-blob:nth-child(2) { background: radial-gradient(ellipse, rgba(0,255,200,.2), transparent 70%) !important; }
+  .theme-cyber .aurora-blob:nth-child(3) { background: radial-gradient(ellipse, rgba(255,200,0,.12), transparent 70%) !important; }
+  .theme-cyber .glass {
+    background: linear-gradient(145deg, rgba(20,0,40,.9), rgba(30,5,50,.9)) !important;
+    border-color: rgba(255,0,128,.15) !important;
+  }
+  .theme-cyber .nav-item.active {
+    background: rgba(255,0,128,.1) !important; color: #ff69b4 !important;
+    border-color: rgba(255,0,128,.3) !important;
+  }
+  .theme-cyber .nav-item.active::before {
+    background: linear-gradient(180deg, #ff0080, #00ffc8) !important;
+    box-shadow: 0 0 12px rgba(255,0,128,.5) !important;
+  }
+  .theme-cyber .stat-stripe::before {
+    background: linear-gradient(var(--angle), #ff0080, #00ffc8, #ff0080) !important;
+  }
+  .theme-cyber .pill.active { background: rgba(255,0,128,.12) !important; border-color: rgba(255,0,128,.3) !important; color: #ff69b4 !important; }
+  .theme-cyber aside {
+    background: rgba(10,0,21,.85) !important;
+    border-color: rgba(255,0,128,.1) !important;
+  }
+
+  /* ── SUNSET THEME ───────────────────── */
+  body.theme-sunset {
+    background: #1a0a0a !important;
+    --cursor-glow: rgba(255,120,50,.06);
+    --card-glow: rgba(255,120,50,.06);
+  }
+  .theme-sunset .amb {
+    background: radial-gradient(ellipse 70% 45% at 5% 10%, rgba(255,120,50,.12) 0%, transparent 50%),
+      radial-gradient(ellipse 55% 35% at 95% 85%, rgba(255,50,100,.08) 0%, transparent 50%),
+      radial-gradient(ellipse 40% 50% at 55% 50%, rgba(255,200,50,.04) 0%, transparent 60%) !important;
+  }
+  .theme-sunset .aurora-blob:nth-child(1) { background: radial-gradient(ellipse, rgba(255,120,50,.3), transparent 70%) !important; }
+  .theme-sunset .aurora-blob:nth-child(2) { background: radial-gradient(ellipse, rgba(255,50,100,.2), transparent 70%) !important; }
+  .theme-sunset .aurora-blob:nth-child(3) { background: radial-gradient(ellipse, rgba(255,200,50,.15), transparent 70%) !important; }
+  .theme-sunset .glass {
+    background: linear-gradient(145deg, rgba(40,15,10,.9), rgba(50,20,15,.9)) !important;
+    border-color: rgba(255,120,50,.12) !important;
+  }
+  .theme-sunset .nav-item.active {
+    background: rgba(255,120,50,.1) !important; color: #ffaa66 !important;
+    border-color: rgba(255,120,50,.3) !important;
+  }
+  .theme-sunset .nav-item.active::before {
+    background: linear-gradient(180deg, #ff7832, #ff3264) !important;
+    box-shadow: 0 0 12px rgba(255,120,50,.5) !important;
+  }
+  .theme-sunset .stat-stripe::before {
+    background: linear-gradient(var(--angle), #ff7832, #ff3264, #ff7832) !important;
+  }
+  .theme-sunset .pill.active { background: rgba(255,120,50,.12) !important; border-color: rgba(255,120,50,.3) !important; color: #ffaa66 !important; }
+  .theme-sunset aside { background: rgba(26,10,10,.85) !important; border-color: rgba(255,120,50,.1) !important; }
 </style>
 </head>
 <body>
+<div id="cursorGlow"></div>
+<div class="aurora-wrap" id="auroraWrap">
+  <div class="aurora-blob"></div>
+  <div class="aurora-blob"></div>
+  <div class="aurora-blob"></div>
+  <div class="aurora-blob"></div>
+</div>
+<div id="particleContainer"></div>
 <div class="amb"></div>
 
 <!-- SPLASH -->
@@ -317,6 +666,14 @@ tailwind.config = {
 
     <!-- Sidebar footer -->
     <div class="px-5 py-5 border-t border-white/[.06]">
+      <!-- Theme switcher -->
+      <div class="text-[9px] font-bold text-ink4 uppercase tracking-widest mb-2">Tema</div>
+      <div class="theme-bar mb-3" id="themeBar">
+        <div class="theme-btn active-theme" onclick="setTheme('dark')" title="Mørk">🌙</div>
+        <div class="theme-btn" onclick="setTheme('light')" title="Lys">☀️</div>
+        <div class="theme-btn" onclick="setTheme('cyber')" title="Cyberpunk">🌆</div>
+        <div class="theme-btn" onclick="setTheme('sunset')" title="Solnedgang">🌅</div>
+      </div>
       <button onclick="exportPDF()" class="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-white/[.05] border border-white/[.08] text-sm font-semibold text-ink3 cursor-pointer hover:bg-white/[.08] hover:text-ink transition mb-3">
         <span>📄</span> Eksporter PDF
       </button>
@@ -369,7 +726,7 @@ tailwind.config = {
       </div>
 
       <!-- Hero: Rådighedsbeløb -->
-      <div class="rounded-2xl p-6 relative overflow-hidden mb-5"
+      <div class="rounded-2xl p-6 relative overflow-hidden mb-5 hero-breathe"
            style="background:linear-gradient(135deg,rgba(34,211,238,.14),rgba(8,145,178,.1));border:1px solid rgba(34,211,238,.25);box-shadow:0 8px 40px rgba(34,211,238,.08),inset 0 1px 0 rgba(255,255,255,.07)">
         <div class="absolute -top-8 -right-8 w-28 h-28 rounded-full" style="background:radial-gradient(circle,rgba(34,211,238,.18),transparent 70%)"></div>
         <div class="text-xs font-semibold uppercase tracking-wider mb-1.5" style="color:rgba(103,232,249,.7)">Rådighedsbeløb</div>
@@ -2400,6 +2757,228 @@ setTimeout(()=>{document.getElementById('splash').classList.add('out');setTimeou
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){closeTripModal();closeGoalModal();closeFirmaModal();}
 });
+
+// ════════════════════════════════════════════
+// VISUAL GIMMICKS & EFFECTS
+// ════════════════════════════════════════════
+
+// ── Cursor Glow Trail ──
+const cursorGlow = document.getElementById('cursorGlow');
+let mouseX = 0, mouseY = 0, glowX = 0, glowY = 0;
+document.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
+(function animateGlow() {
+  glowX += (mouseX - glowX) * 0.08;
+  glowY += (mouseY - glowY) * 0.08;
+  cursorGlow.style.left = glowX + 'px';
+  cursorGlow.style.top = glowY + 'px';
+  requestAnimationFrame(animateGlow);
+})();
+
+// ── Theme System ──
+const THEMES = ['dark','light','cyber','sunset'];
+function setTheme(name) {
+  document.body.className = name === 'dark' ? '' : 'theme-' + name;
+  document.documentElement.style.background = name === 'light' ? '#f4f6fb' :
+    name === 'cyber' ? '#0a0015' : name === 'sunset' ? '#1a0a0a' : '#080c14';
+  document.querySelectorAll('.theme-btn').forEach((btn, i) => {
+    btn.classList.toggle('active-theme', THEMES[i] === name);
+  });
+  localStorage.setItem('okonomi_theme', name);
+  // Flash transition
+  const flash = document.createElement('div');
+  flash.style.cssText = 'position:fixed;inset:0;z-index:9998;pointer-events:none;background:white;opacity:.06;transition:opacity .5s;';
+  document.body.appendChild(flash);
+  requestAnimationFrame(() => { flash.style.opacity = '0'; });
+  setTimeout(() => flash.remove(), 600);
+}
+// Restore theme
+const savedTheme = localStorage.getItem('okonomi_theme');
+if (savedTheme && savedTheme !== 'dark') setTheme(savedTheme);
+
+// ── Floating Particles ──
+function spawnParticles() {
+  const container = document.getElementById('particleContainer');
+  const colors = ['rgba(34,211,238,.5)','rgba(163,230,53,.4)','rgba(139,92,246,.4)','rgba(251,113,133,.35)','rgba(245,158,11,.4)'];
+  for (let i = 0; i < 20; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = 2 + Math.random() * 3;
+    const dur = 15 + Math.random() * 25;
+    const delay = Math.random() * dur;
+    p.style.cssText = `
+      left:${Math.random()*100}%; width:${size}px; height:${size}px;
+      background:${colors[i % colors.length]};
+      animation-duration:${dur}s; animation-delay:-${delay}s;
+      --drift:${-60 + Math.random()*120}px;
+    `;
+    container.appendChild(p);
+  }
+}
+spawnParticles();
+
+// ── Confetti Explosion ──
+function confetti(x, y) {
+  const colors = ['#22d3ee','#a3e635','#fb7185','#f59e0b','#8b5cf6','#67e8f9','#fda4af','#fcd34d'];
+  for (let i = 0; i < 60; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    const angle = (Math.PI * 2 * i) / 60;
+    const velocity = 100 + Math.random() * 300;
+    const dx = Math.cos(angle) * velocity;
+    piece.style.cssText = `
+      left:${x}px; top:${y}px;
+      background:${colors[i % colors.length]};
+      transform: rotate(${Math.random()*360}deg);
+      animation-duration: ${1.5 + Math.random()*2}s;
+      animation-delay: ${Math.random()*.15}s;
+      margin-left: ${dx * .5}px;
+    `;
+    document.body.appendChild(piece);
+    setTimeout(() => piece.remove(), 4000);
+  }
+}
+
+// Hook confetti to goal completion
+const origDeposit = depositGoal;
+depositGoal = function(idx, amount) {
+  origDeposit(idx, amount);
+  const g = S.goals[idx];
+  if (g && g.saved >= g.target) {
+    const card = document.querySelectorAll('[onclick*="depositGoal"]')[idx * 2];
+    const rect = card ? card.getBoundingClientRect() : { left: window.innerWidth / 2, top: window.innerHeight / 2 };
+    confetti(rect.left, rect.top);
+    // Screen shake
+    document.body.style.animation = 'shake .5s ease';
+    setTimeout(() => document.body.style.animation = '', 600);
+  }
+};
+
+// ── Konami Code Easter Egg ──
+const konamiCode = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+let konamiIdx = 0;
+document.addEventListener('keydown', e => {
+  if (e.key === konamiCode[konamiIdx]) {
+    konamiIdx++;
+    if (konamiIdx === konamiCode.length) {
+      konamiIdx = 0;
+      activatePartyMode();
+    }
+  } else {
+    konamiIdx = 0;
+  }
+});
+
+function activatePartyMode() {
+  confetti(window.innerWidth / 2, window.innerHeight / 2);
+  // Rainbow mode for 5 seconds
+  document.body.style.animation = 'partyRainbow 1s linear infinite';
+  // Spin all stat cards
+  document.querySelectorAll('.stat-stripe').forEach((card, i) => {
+    card.style.animation = `cardDance .5s ease ${i * .1}s 3 alternate`;
+  });
+  // Show message
+  const msg = document.createElement('div');
+  msg.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10000;font-size:80px;text-shadow:0 0 40px rgba(34,211,238,.5);animation:pageFlipIn .5s ease both;pointer-events:none;';
+  msg.textContent = '🎉🎊🥳';
+  document.body.appendChild(msg);
+  setTimeout(() => { msg.style.opacity = '0'; msg.style.transition = 'opacity .5s'; }, 3000);
+  setTimeout(() => { msg.remove(); document.body.style.animation = ''; }, 4000);
+}
+
+// ── Shake Animation ──
+const shakeStyle = document.createElement('style');
+shakeStyle.textContent = `
+  @keyframes shake {
+    0%, 100% { transform: translate(0); }
+    20% { transform: translate(-3px, 2px); }
+    40% { transform: translate(3px, -2px); }
+    60% { transform: translate(-2px, 3px); }
+    80% { transform: translate(2px, -3px); }
+  }
+  @keyframes partyRainbow {
+    0% { filter: hue-rotate(0deg); }
+    100% { filter: hue-rotate(360deg); }
+  }
+  @keyframes cardDance {
+    0% { transform: translateY(0) rotate(0deg); }
+    100% { transform: translateY(-12px) rotate(3deg); }
+  }
+`;
+document.head.appendChild(shakeStyle);
+
+// ── Click Ripple Effect ──
+document.addEventListener('click', e => {
+  const ripple = document.createElement('div');
+  ripple.style.cssText = `
+    position:fixed; left:${e.clientX}px; top:${e.clientY}px;
+    width:0; height:0; border-radius:50%;
+    border: 2px solid rgba(34,211,238,.3);
+    transform: translate(-50%,-50%);
+    pointer-events:none; z-index:9997;
+    animation: clickRipple .6s ease-out forwards;
+  `;
+  document.body.appendChild(ripple);
+  setTimeout(() => ripple.remove(), 700);
+});
+const rippleStyle = document.createElement('style');
+rippleStyle.textContent = `
+  @keyframes clickRipple {
+    0% { width: 0; height: 0; opacity: 1; }
+    100% { width: 60px; height: 60px; opacity: 0; }
+  }
+`;
+document.head.appendChild(rippleStyle);
+
+// ── Enhanced Splash ──
+const splashEl = document.getElementById('splash');
+if (splashEl) {
+  const splashGlow = document.createElement('div');
+  splashGlow.style.cssText = 'position:absolute;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(34,211,238,.15),transparent 70%);animation:auroraFloat 6s ease-in-out infinite;pointer-events:none;';
+  splashEl.insertBefore(splashGlow, splashEl.firstChild);
+}
+
+// ── Number update animation ──
+const origCountUp = countUp;
+countUp = function(id, target, ms, fmt) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.classList.remove('num-flip');
+    void el.offsetWidth;
+    el.classList.add('num-flip');
+    el.classList.add('pulse-value');
+  }
+  return origCountUp(id, target, ms, fmt);
+};
+
+// ── Hover sound effect (subtle) ──
+// Using Web Audio API for tiny click sounds on nav
+let audioCtx;
+function playTick() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.frequency.value = 800 + Math.random() * 400;
+  osc.type = 'sine';
+  gain.gain.value = 0.015;
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.08);
+}
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('mouseenter', playTick);
+});
+
+// ── Daily greeting based on time ──
+(function updateGreeting() {
+  const h = new Date().getHours();
+  const greetEl = document.querySelector('#p0 p.text-sm');
+  if (greetEl) {
+    const greeting = h < 6 ? '🌙 Natarbejde? ' : h < 12 ? '☀️ Godmorgen! ' : h < 17 ? '👋 God eftermiddag! ' : h < 21 ? '🌆 God aften! ' : '🌙 Sen aften — ';
+    greetEl.textContent = greeting + 'Din samlede økonomi som freelance lystekniker';
+  }
+})();
 </script>
 </body>
 </html>
