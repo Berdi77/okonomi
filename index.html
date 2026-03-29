@@ -1,0 +1,2405 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Økonomi 2026 — Selvstændig Erhvervsdrivende</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@400;500;700;800;900&family=Bricolage+Grotesque:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        bg: '#080c14',
+        s0: '#0b1020',
+        s1: '#0f1628',
+        s2: '#141e32',
+        s3: '#1a2640',
+        ink: '#f0f6ff',
+        ink2: '#94a3b8',
+        ink3: '#475569',
+        ink4: '#2a3a52',
+        cyan: '#22d3ee',
+        cyan2: '#67e8f9',
+        cyan3: '#a5f3fc',
+        lime: '#a3e635',
+        lime2: '#bef264',
+        coral: '#fb7185',
+        coral2: '#fda4af',
+        amber: '#f59e0b',
+        amber2: '#fcd34d',
+        violet: '#8b5cf6',
+        violet2: '#a78bfa',
+        sky2: '#38bdf8',
+      },
+      fontFamily: {
+        display: ['"Cabinet Grotesk"', 'sans-serif'],
+        body: ['"Bricolage Grotesque"', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'monospace'],
+      },
+    }
+  }
+}
+</script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { background: #080c14; }
+  body {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    background: #080c14;
+    color: #f0f6ff;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Noise texture */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    opacity: .35;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+  }
+
+  /* Ambient gradients */
+  .amb {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse 70% 45% at 5% 10%, rgba(34,211,238,.07) 0%, transparent 50%),
+      radial-gradient(ellipse 55% 35% at 95% 85%, rgba(163,230,53,.05) 0%, transparent 50%),
+      radial-gradient(ellipse 40% 50% at 55% 50%, rgba(139,92,246,.03) 0%, transparent 60%);
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.18); }
+
+  /* Sidebar nav item */
+  .nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 16px; border-radius: 12px;
+    font-size: 14px; font-weight: 600;
+    color: #94a3b8; cursor: pointer;
+    transition: all .2s ease;
+    user-select: none;
+  }
+  .nav-item:hover { background: rgba(255,255,255,.05); color: #f0f6ff; }
+  .nav-item.active {
+    background: rgba(34,211,238,.08);
+    color: #67e8f9;
+    border: 1px solid rgba(34,211,238,.2);
+  }
+  .nav-item .nav-ico { font-size: 18px; width: 24px; text-align: center; }
+
+  /* Glass card base */
+  .glass {
+    background: linear-gradient(145deg, rgba(15,22,40,.9), rgba(20,30,50,.9));
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.05);
+  }
+
+  /* Stat card accent stripe */
+  .stat-stripe::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: var(--stripe-color, #22d3ee);
+    border-radius: 16px 16px 0 0;
+  }
+
+  /* Table rows */
+  .trow {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 20px;
+    border-bottom: 1px solid rgba(255,255,255,.04);
+    font-size: 14px;
+    transition: background .12s;
+  }
+  .trow:last-child { border-bottom: none; }
+  .trow:hover { background: rgba(255,255,255,.03); }
+  .trow.alt { background: rgba(255,255,255,.015); }
+  .trow.foot {
+    background: rgba(255,255,255,.04);
+    border-top: 1px solid rgba(255,255,255,.06);
+  }
+  .trow.foot .t-n { font-weight: 800; font-size: 15px; }
+  .trow.foot .t-v { font-size: 16px; }
+
+  /* Input styling */
+  .field-inp {
+    width: 100%; padding: 12px 16px;
+    background: rgba(255,255,255,.06);
+    border: 1.5px solid rgba(255,255,255,.1);
+    border-radius: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px; font-weight: 500;
+    color: #f0f6ff; outline: none;
+    -webkit-appearance: none;
+    transition: border-color .2s;
+  }
+  .field-inp:focus { border-color: rgba(34,211,238,.5); }
+  .field-inp::placeholder { color: #2a3a52; }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,.6);
+    backdrop-filter: blur(8px);
+    opacity: 0; pointer-events: none;
+    transition: opacity .3s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal-panel {
+    position: fixed; top: 50%; left: 50%;
+    transform: translate(-50%, -48%) scale(.96);
+    z-index: 210;
+    width: 460px; max-width: 92vw;
+    max-height: 80vh; overflow-y: auto;
+    background: linear-gradient(145deg, #0f1628, #141e32);
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 20px;
+    padding: 32px;
+    box-shadow: 0 40px 100px rgba(0,0,0,.5);
+    opacity: 0; pointer-events: none;
+    transition: all .35s cubic-bezier(.34,1.1,.64,1);
+  }
+  .modal-panel.open {
+    opacity: 1; pointer-events: all;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  /* Expense row */
+  .exp-field {
+    display: flex; align-items: center; gap: 5px;
+    background: rgba(255,255,255,.06);
+    border-radius: 10px; padding: 8px 12px;
+    border: 1.5px solid transparent;
+    transition: border-color .2s, background .2s;
+  }
+  .exp-field:focus-within { border-color: rgba(34,211,238,.4); background: rgba(34,211,238,.06); }
+  .exp-inp {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px; font-weight: 500;
+    color: #f0f6ff; background: none; border: none; outline: none;
+    width: 80px; text-align: right;
+    -webkit-appearance: none;
+  }
+
+  /* Pill buttons */
+  .pill {
+    padding: 8px 16px; border-radius: 30px;
+    font-size: 13px; font-weight: 700;
+    color: #475569; background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.07);
+    cursor: pointer; transition: all .2s;
+    user-select: none;
+  }
+  .pill:hover { background: rgba(255,255,255,.08); }
+  .pill.active {
+    background: rgba(34,211,238,.12);
+    border-color: rgba(34,211,238,.3);
+    color: #67e8f9;
+  }
+
+  /* Splash */
+  #splash {
+    position: fixed; inset: 0; z-index: 999;
+    background: #080c14;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 20px;
+    transition: opacity .6s, transform .6s;
+  }
+  #splash.out { opacity: 0; transform: scale(1.05); pointer-events: none; }
+
+  /* Emoji grid */
+  .emoji-opt {
+    aspect-ratio: 1; border-radius: 10px;
+    background: rgba(255,255,255,.04);
+    border: 1.5px solid transparent;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; cursor: pointer; transition: all .15s;
+  }
+  .emoji-opt:hover { background: rgba(255,255,255,.08); }
+  .emoji-opt.on { border-color: rgba(34,211,238,.5); background: rgba(34,211,238,.1); }
+
+  /* Page section animation */
+  .page-section { animation: fadeUp .4s ease both; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Save indicator */
+  .save-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #a3e635;
+    opacity: 0; transition: opacity .3s;
+    box-shadow: 0 0 6px #a3e635;
+  }
+  .save-dot.on { opacity: 1; }
+
+  /* Range slider */
+  input[type="range"] {
+    -webkit-appearance: none; appearance: none;
+    height: 6px; border-radius: 3px; outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: #22d3ee; cursor: pointer;
+    box-shadow: 0 2px 8px rgba(34,211,238,.4);
+    border: 2px solid rgba(255,255,255,.2);
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 18px; height: 18px; border-radius: 50%;
+    background: #22d3ee; cursor: pointer; border: 2px solid rgba(255,255,255,.2);
+  }
+
+  /* Goal card actions */
+  .gc-btn {
+    padding: 7px 14px; border-radius: 8px;
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.08);
+    font-size: 12px; font-weight: 700; color: #94a3b8;
+    cursor: pointer; transition: all .15s; user-select: none;
+  }
+  .gc-btn:hover { background: rgba(255,255,255,.1); }
+  .gc-btn.primary { background: rgba(34,211,238,.1); border-color: rgba(34,211,238,.25); color: #67e8f9; }
+  .gc-btn.primary:hover { background: rgba(34,211,238,.18); }
+</style>
+</head>
+<body>
+<div class="amb"></div>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="flex items-center justify-center w-20 h-20 rounded-2xl text-4xl"
+       style="background:linear-gradient(135deg,#22d3ee,#0891b2);box-shadow:0 0 0 1px rgba(34,211,238,.2),0 20px 60px rgba(34,211,238,.3)">💼</div>
+  <div class="font-display text-3xl font-black tracking-tight text-ink">Økonomi 2026</div>
+  <div class="text-sm text-ink3">Roskilde · Tesla Model 3 · Selvstændig</div>
+  <div class="w-16 h-0.5 bg-white/10 rounded overflow-hidden">
+    <div class="h-full rounded" style="background:linear-gradient(90deg,#22d3ee,#a3e635);animation:lLoad .8s .3s ease both;width:0"></div>
+  </div>
+</div>
+<style>@keyframes lLoad{to{width:100%}}</style>
+
+<!-- LAYOUT -->
+<div class="relative z-10 flex min-h-screen" id="app">
+
+  <!-- SIDEBAR -->
+  <aside class="fixed left-0 top-0 bottom-0 w-[260px] flex flex-col border-r border-white/[.06] bg-s0/80 backdrop-blur-xl z-50">
+    <!-- Brand -->
+    <div class="flex items-center gap-3 px-6 pt-8 pb-6">
+      <div class="w-2.5 h-2.5 rounded-full bg-cyan shadow-[0_0_8px_#22d3ee]"></div>
+      <span class="font-display text-xl font-black tracking-tight">Økonomi</span>
+      <span class="ml-auto text-[11px] font-semibold text-ink3 bg-white/[.04] border border-white/[.07] rounded-full px-2.5 py-1">2026</span>
+    </div>
+
+    <!-- Nav -->
+    <nav class="flex-1 flex flex-col gap-1.5 px-4" id="navList">
+      <div class="nav-item active" onclick="goTab(0)"><span class="nav-ico">📊</span>Oversigt</div>
+      <div class="nav-item" onclick="goTab(1)"><span class="nav-ico">✏️</span>Udgifter</div>
+      <div class="nav-item" onclick="goTab(2)"><span class="nav-ico">🏦</span>Opsparing</div>
+      <div class="nav-item" onclick="goTab(3)"><span class="nav-ico">📈</span>Scenarier</div>
+      <div class="nav-item" onclick="goTab(5)"><span class="nav-ico">🚗</span>Kørsel</div>
+      <div class="nav-item" onclick="goTab(6)"><span class="nav-ico">🧾</span>Firmaudgifter</div>
+      <div class="nav-item" onclick="goTab(4)"><span class="nav-ico">⚙️</span>Parametre</div>
+
+      <div class="h-px bg-white/[.06] my-3 mx-2"></div>
+      <div class="text-[9px] font-bold text-ink4 uppercase tracking-widest px-4 mb-1">Værktøjer</div>
+      <div class="nav-item" onclick="goTab(7)"><span class="nav-ico">📊</span>Årsprojektion</div>
+      <div class="nav-item" onclick="goTab(8)"><span class="nav-ico">💱</span>Valuta</div>
+      <div class="nav-item" onclick="goTab(9)"><span class="nav-ico">🗺️</span>Km-beregner</div>
+    </nav>
+
+    <!-- Sidebar footer -->
+    <div class="px-5 py-5 border-t border-white/[.06]">
+      <button onclick="exportPDF()" class="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-white/[.05] border border-white/[.08] text-sm font-semibold text-ink3 cursor-pointer hover:bg-white/[.08] hover:text-ink transition mb-3">
+        <span>📄</span> Eksporter PDF
+      </button>
+      <div class="flex items-center gap-2">
+        <div class="save-dot" id="saveDot"></div>
+        <span class="text-xs text-ink3 font-semibold" id="savedChip">Ikke gemt endnu</span>
+      </div>
+      <div class="text-[10px] text-ink4 mt-2">Roskilde · Enkeltmandsvirksomhed</div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="ml-[260px] flex-1 p-8 lg:p-10 xl:p-12 max-w-[1200px]">
+
+    <!-- ══════════════════════ PANE 0: OVERSIGT ══════════════════════ -->
+    <section class="page-section" id="p0">
+      <div class="flex items-baseline justify-between mb-8">
+        <div>
+          <h1 class="font-display text-3xl font-black tracking-tight">Økonomisk Oversigt</h1>
+          <p class="text-sm text-ink3 mt-1">Din samlede økonomi som freelance lystekniker</p>
+        </div>
+      </div>
+
+      <!-- Revenue Input -->
+      <div class="glass p-6 mb-5 relative overflow-hidden">
+        <div class="absolute -top-14 -right-14 w-40 h-40 rounded-full" style="background:radial-gradient(circle,rgba(34,211,238,.1) 0%,transparent 70%)"></div>
+        <label class="text-[11px] font-semibold text-ink3 uppercase tracking-wider">Månedlig omsætning inkl. moms</label>
+        <div class="flex items-baseline gap-3 mt-3 mb-4">
+          <span class="font-mono text-2xl text-ink3">kr.</span>
+          <input class="font-mono text-5xl font-semibold text-ink bg-transparent border-none outline-none w-full tracking-tighter caret-cyan" style="-webkit-appearance:none"
+                 id="omsInp" type="number" inputmode="numeric" placeholder="60000" value="60000" oninput="onOms()">
+        </div>
+        <div class="h-px bg-white/[.06] -mx-6 mb-4"></div>
+        <div class="flex gap-2 flex-wrap" id="pillRow">
+          <div class="pill" onclick="setPill(40000)">😓 40k</div>
+          <div class="pill active" onclick="setPill(60000)">📊 60k</div>
+          <div class="pill" onclick="setPill(75000)">🚀 75k</div>
+          <div class="pill" onclick="setPill(85000)">☀️ 85k</div>
+        </div>
+      </div>
+
+      <!-- Status ribbon -->
+      <div class="rounded-xl p-4 flex items-center gap-3.5 mb-5 border transition-all" id="statusEl"
+           style="background:rgba(163,230,53,.07);border-color:rgba(163,230,53,.22);color:#bef264">
+        <span class="text-2xl flex-shrink-0" id="srIco">✅</span>
+        <div>
+          <div class="text-sm font-bold" id="srTit">—</div>
+          <div class="text-[11px] opacity-65 mt-0.5" id="srSub">—</div>
+        </div>
+      </div>
+
+      <!-- Hero: Rådighedsbeløb -->
+      <div class="rounded-2xl p-6 relative overflow-hidden mb-5"
+           style="background:linear-gradient(135deg,rgba(34,211,238,.14),rgba(8,145,178,.1));border:1px solid rgba(34,211,238,.25);box-shadow:0 8px 40px rgba(34,211,238,.08),inset 0 1px 0 rgba(255,255,255,.07)">
+        <div class="absolute -top-8 -right-8 w-28 h-28 rounded-full" style="background:radial-gradient(circle,rgba(34,211,238,.18),transparent 70%)"></div>
+        <div class="text-xs font-semibold uppercase tracking-wider mb-1.5" style="color:rgba(103,232,249,.7)">Rådighedsbeløb</div>
+        <div class="font-mono text-4xl font-semibold text-white tracking-tight mb-1" id="hsVal">—</div>
+        <div class="flex items-center justify-between">
+          <div class="text-xs" style="color:rgba(103,232,249,.55)" id="hsSub">pr. måned</div>
+          <div class="text-[11px] font-bold px-3 py-1 rounded-full" id="hsBadge" style="background:rgba(163,230,53,.15);color:#bef264">—</div>
+        </div>
+      </div>
+
+      <!-- 4 stat cards -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+        <div class="glass p-4 relative overflow-hidden stat-stripe" style="--stripe-color:#22d3ee">
+          <span class="text-xl block mb-2">💰</span>
+          <div class="text-[10px] font-semibold text-ink3 uppercase tracking-wider mb-1">Netto/md.</div>
+          <div class="font-mono text-lg font-semibold text-cyan2 tracking-tight" id="stNetto">—</div>
+          <div class="text-[10px] text-ink3 mt-0.5">efter skat</div>
+        </div>
+        <div class="glass p-4 relative overflow-hidden stat-stripe" style="--stripe-color:#fb7185">
+          <span class="text-xl block mb-2">📋</span>
+          <div class="text-[10px] font-semibold text-ink3 uppercase tracking-wider mb-1">Udgifter/md.</div>
+          <div class="font-mono text-lg font-semibold text-coral2 tracking-tight" id="stUdg">—</div>
+          <div class="text-[10px] text-ink3 mt-0.5">faste</div>
+        </div>
+        <div class="glass p-4 relative overflow-hidden stat-stripe" style="--stripe-color:#8b5cf6">
+          <span class="text-xl block mb-2">📅</span>
+          <div class="text-[10px] font-semibold text-ink3 uppercase tracking-wider mb-1">Pr. dag</div>
+          <div class="font-mono text-lg font-semibold text-violet2 tracking-tight" id="stDay">—</div>
+          <div class="text-[10px] text-ink3 mt-0.5">til rådighed</div>
+        </div>
+        <div class="glass p-4 relative overflow-hidden stat-stripe" style="--stripe-color:#f59e0b">
+          <span class="text-xl block mb-2">📆</span>
+          <div class="text-[10px] font-semibold text-ink3 uppercase tracking-wider mb-1">Pr. år</div>
+          <div class="font-mono text-lg font-semibold text-amber2 tracking-tight" id="stYear">—</div>
+          <div class="text-[10px] text-ink3 mt-0.5">rådighedsbeløb</div>
+        </div>
+      </div>
+
+      <!-- Two columns: Tax breakdown + Set aside -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
+        <!-- Tax breakdown table -->
+        <div class="glass overflow-hidden">
+          <div class="px-5 py-3 bg-white/[.03] border-b border-white/[.04] flex items-center justify-between">
+            <span class="text-[11px] font-bold text-ink3 uppercase tracking-wider">Indkomstberegning</span>
+            <span class="text-[10px] text-ink3/60" id="tMomsNote">inkl. moms</span>
+          </div>
+          <div class="trow alt"><div class="flex-1"><div class="text-sm text-ink">Omsætning inkl. moms</div></div><div class="font-mono text-[13px] font-medium text-cyan2 ml-3" id="tOms">—</div></div>
+          <div class="trow"><div class="flex-1"><div class="text-sm text-ink">Moms (20%)</div></div><div class="font-mono text-[13px] font-medium text-coral2 ml-3" id="tMoms">—</div></div>
+          <div class="trow alt"><div class="flex-1"><div class="text-sm text-ink">Excl. moms</div></div><div class="font-mono text-[13px] font-medium text-ink2 ml-3" id="tExcl">—</div></div>
+          <div class="trow"><div class="flex-1"><div class="text-sm text-ink">Firmaomk. + km-fradrag</div><div class="text-[11px] text-ink3 mt-0.5" id="tFradragDesc">—</div></div><div class="font-mono text-[13px] font-medium text-coral2 ml-3" id="tFradrag">—</div></div>
+          <div class="trow alt"><div class="flex-1"><div class="text-sm text-ink">Virksomhedens overskud</div><div class="text-[11px] text-ink3 mt-0.5">Indberettes rubrik 221</div></div><div class="font-mono text-[13px] font-medium text-ink2 ml-3" id="tOvsk">—</div></div>
+          <div class="trow"><div class="flex-1"><div class="text-sm text-ink">AM-bidrag (8%)</div></div><div class="font-mono text-[13px] font-medium text-coral2 ml-3" id="tAM">—</div></div>
+          <div class="trow alt"><div class="flex-1"><div class="text-sm text-ink">Personlig indkomst</div></div><div class="font-mono text-[13px] font-medium text-ink2 ml-3" id="tPersIndk">—</div></div>
+          <div class="trow"><div class="flex-1"><div class="text-sm text-ink">Personfradrag</div><div class="text-[11px] text-ink3">54.100 kr./år = 4.508 kr./md.</div></div><div class="font-mono text-[13px] font-medium text-lime2 ml-3" id="tPersFrad">—</div></div>
+          <div class="trow alt"><div class="flex-1"><div class="text-sm text-ink">Beskæftigelsesfradrag</div><div class="text-[11px] text-ink3">12,75% af pers.indkomst, maks 63.300/år</div></div><div class="font-mono text-[13px] font-medium text-lime2 ml-3" id="tBeskFrad">—</div></div>
+          <div class="trow"><div class="flex-1"><div class="text-sm text-ink">Beskatningsgrundlag</div></div><div class="font-mono text-[13px] font-medium text-ink2 ml-3" id="tSkattepligtig">—</div></div>
+          <div class="trow alt"><div class="flex-1"><div class="text-sm text-ink">Bundskat (12,01%)</div></div><div class="font-mono text-[13px] font-medium text-coral2 ml-3" id="tBundSkat">—</div></div>
+          <div class="trow"><div class="flex-1"><div class="text-sm text-ink">Komm.+kirkeskat (26,04%)</div></div><div class="font-mono text-[13px] font-medium text-coral2 ml-3" id="tKommSkat">—</div></div>
+          <div class="trow alt"><div class="flex-1"><div class="text-sm text-ink">Samlet skat</div></div><div class="font-mono text-[13px] font-medium text-coral2 ml-3" id="tSkat">—</div></div>
+          <div class="trow foot"><div class="flex-1"><div class="text-[15px] font-extrabold text-ink">Netto til rådighed</div></div><div class="font-mono text-base font-semibold text-lime2 ml-3" id="tNetto">—</div></div>
+        </div>
+
+        <!-- Set aside column -->
+        <div class="flex flex-col gap-4">
+          <!-- Transfer hero -->
+          <div class="rounded-2xl p-5 relative overflow-hidden"
+               style="background:linear-gradient(135deg,rgba(163,230,53,.15),rgba(101,163,13,.1));border:1px solid rgba(163,230,53,.28);box-shadow:0 8px 40px rgba(163,230,53,.08),inset 0 1px 0 rgba(255,255,255,.07)">
+            <div class="absolute -top-8 -right-8 w-28 h-28 rounded-full" style="background:radial-gradient(circle,rgba(163,230,53,.2),transparent 70%)"></div>
+            <div class="text-xs font-semibold uppercase tracking-wider mb-1" style="color:rgba(190,242,100,.7)">💸 Kan overføres til privat</div>
+            <div class="font-mono text-3xl font-semibold text-white tracking-tight mb-1" id="thVal">—</div>
+            <div class="text-xs mb-4" style="color:rgba(190,242,100,.55)">efter skat, moms og firmaomk. er reserveret</div>
+            <div class="flex items-center gap-0 pt-3.5 border-t" style="border-color:rgba(163,230,53,.15)">
+              <div class="flex-1 text-center">
+                <div class="text-[10px] font-semibold uppercase tracking-wider mb-1" style="color:rgba(190,242,100,.5)">🧾 Moms reserve</div>
+                <div class="font-mono text-sm font-semibold text-coral2" id="thMoms">—</div>
+              </div>
+              <div class="w-px self-stretch" style="background:rgba(163,230,53,.15)"></div>
+              <div class="flex-1 text-center">
+                <div class="text-[10px] font-semibold uppercase tracking-wider mb-1" style="color:rgba(190,242,100,.5)">📊 AM + skat</div>
+                <div class="font-mono text-sm font-semibold text-coral2" id="thSkat">—</div>
+              </div>
+              <div class="w-px self-stretch" style="background:rgba(163,230,53,.15)"></div>
+              <div class="flex-1 text-center">
+                <div class="text-[10px] font-semibold uppercase tracking-wider mb-1" style="color:rgba(190,242,100,.5)">💼 Firmaomk.</div>
+                <div class="font-mono text-sm font-semibold text-coral2" id="thFirma">—</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Moms set aside -->
+          <div class="glass p-5 relative overflow-hidden" style="border-color:rgba(245,158,11,.25)">
+            <div class="absolute -top-7 -right-7 w-24 h-24 rounded-full" style="background:radial-gradient(circle,rgba(245,158,11,.15),transparent 70%)"></div>
+            <div class="flex items-center justify-between mb-3">
+              <div>
+                <div class="text-[11px] font-bold uppercase tracking-wider mb-0.5" style="color:rgba(252,211,77,.7)">🧾 Moms</div>
+                <div class="text-[10px] text-ink3">Afregnes kvartalsvis til SKAT</div>
+              </div>
+              <div class="text-right">
+                <div class="font-mono text-2xl font-semibold text-amber2 tracking-tight" id="ssMoms">—</div>
+                <div class="text-[10px] text-ink3">pr. måned</div>
+              </div>
+            </div>
+            <div class="bg-black/20 rounded-lg p-3">
+              <div class="flex justify-between text-[11px] font-semibold mb-1.5" style="color:rgba(252,211,77,.6)">
+                <span>Akkumuleret over kvartalet</span>
+                <span id="ssMomsQtr">—</span>
+              </div>
+              <div class="h-1.5 bg-white/[.07] rounded-full overflow-hidden mb-1.5">
+                <div id="ssMomsBar" class="h-full rounded-full transition-all duration-700" style="background:linear-gradient(90deg,#f59e0b,#fcd34d);width:33%"></div>
+              </div>
+              <div class="flex justify-between text-[10px] text-ink3">
+                <span>Betales ved kvartalsafslutning</span>
+                <span class="font-mono text-amber2" id="ssMomsQtrTot">—</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Skat set aside -->
+          <div class="glass p-5 relative overflow-hidden" style="border-color:rgba(139,92,246,.25)">
+            <div class="absolute -top-7 -right-7 w-24 h-24 rounded-full" style="background:radial-gradient(circle,rgba(139,92,246,.15),transparent 70%)"></div>
+            <div class="flex items-center justify-between mb-3">
+              <div>
+                <div class="text-[11px] font-bold uppercase tracking-wider mb-0.5" style="color:rgba(167,139,250,.7)">🏛️ Skat</div>
+                <div class="text-[10px] text-ink3">AM-bidrag + indkomstskat</div>
+              </div>
+              <div class="text-right">
+                <div class="font-mono text-2xl font-semibold text-violet2 tracking-tight" id="ssSkat">—</div>
+                <div class="text-[10px] text-ink3">pr. måned</div>
+              </div>
+            </div>
+            <div class="bg-black/20 rounded-lg p-3 flex flex-col gap-2">
+              <div class="flex justify-between text-xs">
+                <span style="color:rgba(167,139,250,.65)">AM-bidrag (8%)</span>
+                <span class="font-mono font-semibold text-violet2" id="ssAM">—</span>
+              </div>
+              <div class="flex justify-between text-xs">
+                <span style="color:rgba(167,139,250,.65)">Indkomstskat (bund + komm)</span>
+                <span class="font-mono font-semibold text-violet2" id="ssIndSkat">—</span>
+              </div>
+              <div class="h-px bg-white/[.07]"></div>
+              <div class="flex justify-between text-xs">
+                <span class="font-bold" style="color:rgba(167,139,250,.8)">Samlet skat pr. måned</span>
+                <span class="font-mono font-bold text-violet2" id="ssSkatTot">—</span>
+              </div>
+              <div class="flex justify-between text-[11px] pt-0.5">
+                <span class="text-ink3">Sæt til side i alt (moms + skat)</span>
+                <span class="font-mono font-bold text-cyan2" id="ssTotalRes">—</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════ PANE 1: UDGIFTER ══════════════════════ -->
+    <section class="page-section hidden" id="p1">
+      <div class="flex items-baseline justify-between mb-6">
+        <div>
+          <h1 class="font-display text-3xl font-black tracking-tight">Udgifter</h1>
+          <p class="text-sm text-ink3 mt-1">Ret et beløb direkte — alt opdaterer i realtid.</p>
+        </div>
+        <div class="text-xs font-semibold bg-white/[.04] border border-white/[.07] text-ink3 rounded-full px-3 py-1" id="expTotTag">—/md.</div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <div class="lg:col-span-3">
+          <div class="glass overflow-hidden" id="expList"></div>
+        </div>
+        <div class="lg:col-span-2">
+          <div class="glass p-5">
+            <div class="text-sm font-bold text-ink mb-4">Fordeling</div>
+            <div class="flex items-start gap-5 mb-4">
+              <canvas id="donut" width="130" height="130" class="flex-shrink-0"></canvas>
+              <div>
+                <div class="text-[11px] text-ink3 mb-1">Samlede udgifter</div>
+                <div class="font-mono text-xl font-semibold text-ink" id="donutVal">—</div>
+                <div class="text-[11px] text-ink3 mt-0.5">kr. pr. måned</div>
+                <div class="font-mono text-sm text-ink2 mt-2" id="donutYr">— kr./år</div>
+              </div>
+            </div>
+            <div class="flex flex-col gap-2" id="legEl"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════ PANE 2: OPSPARING ══════════════════════ -->
+    <section class="page-section hidden" id="p2">
+      <div class="flex items-baseline justify-between mb-6">
+        <div>
+          <h1 class="font-display text-3xl font-black tracking-tight">Opsparingsmål</h1>
+          <p class="text-sm text-ink3 mt-1">Opret mål og se hvornår du når dem baseret på dit rådighedsbeløb.</p>
+        </div>
+        <div class="text-xs font-semibold bg-white/[.04] border border-white/[.07] text-ink3 rounded-full px-3 py-1" id="savingsSummary">—</div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-5" id="goalsList"></div>
+
+      <div class="glass p-5 flex items-center justify-center gap-3 cursor-pointer hover:bg-white/[.04] transition-colors text-ink3 text-sm font-semibold mb-6"
+           onclick="openAddGoal()">
+        <span class="text-xl">＋</span>
+        <span>Tilføj opsparingsmål</span>
+      </div>
+
+      <h2 class="font-display text-lg font-bold mb-3">Opsparingsoversigt</h2>
+      <div class="glass overflow-hidden" id="savingsOverview"></div>
+    </section>
+
+    <!-- ══════════════════════ PANE 3: SCENARIER ══════════════════════ -->
+    <section class="page-section hidden" id="p3">
+      <div class="mb-6">
+        <h1 class="font-display text-3xl font-black tracking-tight">Scenarier</h1>
+        <p class="text-sm text-ink3 mt-1">Hvad sker der med din økonomi når omsætningen svinger?</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6" id="scenList"></div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div>
+          <h2 class="font-display text-lg font-bold mb-3">Hele året</h2>
+          <div class="glass p-5">
+            <div class="flex items-baseline justify-between mb-4">
+              <div class="text-sm font-bold text-ink">Netto & rådighedsbeløb</div>
+              <div class="text-[11px] text-ink3">Månedlig estimering</div>
+            </div>
+            <div class="flex gap-1 items-end h-28" id="barsEl"></div>
+            <div class="flex gap-4 mt-3">
+              <div class="flex items-center gap-1.5 text-[11px] text-ink2"><div class="w-2 h-2 rounded-sm bg-cyan"></div>Netto</div>
+              <div class="flex items-center gap-1.5 text-[11px] text-ink2"><div class="w-2 h-2 rounded-sm bg-lime"></div>Rådighedsbeløb</div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <h2 class="font-display text-lg font-bold mb-3" id="scenDetTitle">Normal — detaljer</h2>
+          <div class="glass overflow-hidden" id="scenDet"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════ PANE 4: PARAMETRE ══════════════════════ -->
+    <section class="page-section hidden" id="p4">
+      <div class="mb-6">
+        <h1 class="font-display text-3xl font-black tracking-tight">Parametre</h1>
+        <p class="text-sm text-ink3 mt-1">Alle tal er krydstjekket via SKAT.dk, Skatterådet og Clever.dk.</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div class="glass overflow-hidden">
+          <div class="px-5 py-3 bg-white/[.03] border-b border-white/[.04] text-[11px] font-bold text-ink3 uppercase tracking-wider">Skat & Afgifter 2026</div>
+          <div class="trow"><span class="text-ink2 flex-1">AM-bidrag</span><span class="font-mono text-sm text-cyan2">8,00 %</span></div>
+          <div class="trow alt"><span class="text-ink2 flex-1">Bundskat</span><span class="font-mono text-sm text-cyan2">12,01 %</span></div>
+          <div class="trow"><span class="text-ink2 flex-1">Kommuneskat (Roskilde)</span><span class="font-mono text-sm text-cyan2">25,20 %</span></div>
+          <div class="trow alt"><span class="text-ink2 flex-1">Kirkeskat (Roskilde)</span><span class="font-mono text-sm text-cyan2">0,84 %</span></div>
+          <div class="trow"><span class="text-ink2 flex-1">Samlet indkomstskat</span><span class="font-mono text-sm text-cyan2">~38,05 %</span></div>
+          <div class="trow alt"><span class="text-ink2 flex-1">Mellemskattegrænse (efter AM)</span><span class="font-mono text-sm text-cyan2">641.200 kr.</span></div>
+          <div class="trow"><span class="text-ink2 flex-1">Topskattegrænse (efter AM)</span><span class="font-mono text-sm text-cyan2">777.900 kr.</span></div>
+        </div>
+        <div class="flex flex-col gap-5">
+          <div class="glass overflow-hidden">
+            <div class="px-5 py-3 bg-white/[.03] border-b border-white/[.04] text-[11px] font-bold text-ink3 uppercase tracking-wider">Kørsel — Skatterådet 2026</div>
+            <div class="trow"><span class="text-ink2 flex-1">Sats op til 20.000 km/år</span><span class="font-mono text-sm text-cyan2">3,94 kr./km</span></div>
+            <div class="trow alt"><span class="text-ink2 flex-1">Sats over 20.000 km/år</span><span class="font-mono text-sm text-cyan2">2,28 kr./km</span></div>
+            <div class="trow"><span class="text-ink2 flex-1">Erhvervskørsel pr. md.</span><span class="font-mono text-sm text-cyan2">1.250 km</span></div>
+            <div class="trow alt"><span class="text-ink2 flex-1">Månedligt fradrag</span><span class="font-mono text-sm text-cyan2">4.925 kr.</span></div>
+          </div>
+          <div class="glass overflow-hidden">
+            <div class="px-5 py-3 bg-white/[.03] border-b border-white/[.04] text-[11px] font-bold text-ink3 uppercase tracking-wider">Tesla Model 3 LR RWD</div>
+            <div class="trow"><span class="text-ink2 flex-1">Månedlig leasingydelse</span><span class="font-mono text-sm text-cyan2">4.700 kr.</span></div>
+            <div class="trow alt"><span class="text-ink2 flex-1">Udbetaling (engang)</span><span class="font-mono text-sm text-cyan2">20.000 kr.</span></div>
+            <div class="trow"><span class="text-ink2 flex-1">Clever One m. ladeboks</span><span class="font-mono text-sm text-cyan2">799 kr./md.</span></div>
+            <div class="trow alt"><span class="text-ink2 flex-1">Energitillæg > 0,89 kr./kWh</span><span class="font-mono text-sm text-cyan2">Variabel</span></div>
+          </div>
+          <div class="glass overflow-hidden">
+            <div class="px-5 py-3 bg-white/[.03] border-b border-white/[.04] text-[11px] font-bold text-ink3 uppercase tracking-wider">Moms</div>
+            <div class="trow"><span class="text-ink2 flex-1">Momssats</span><span class="font-mono text-sm text-cyan2">25 %</span></div>
+            <div class="trow alt"><span class="text-ink2 flex-1">Moms af inkl.-beløb</span><span class="font-mono text-sm text-cyan2">20 %</span></div>
+            <div class="trow"><span class="text-ink2 flex-1">Afregning</span><span class="font-mono text-sm text-cyan2">Kvartalsvis</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════ PANE 5: KØRSEL ══════════════════════ -->
+    <section class="page-section hidden" id="p5">
+      <div class="flex items-baseline justify-between mb-6">
+        <div>
+          <h1 class="font-display text-3xl font-black tracking-tight">Kørsel</h1>
+          <p class="text-sm text-ink3 mt-1">Registrer dine kørsler og se dit samlede fradrag.</p>
+        </div>
+        <div class="text-xs font-semibold bg-white/[.04] border border-white/[.07] text-ink3 rounded-full px-3 py-1" id="driveTag">—</div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
+        <!-- Config -->
+        <div class="glass overflow-hidden">
+          <div class="px-5 py-3 bg-white/[.03] border-b border-white/[.04] flex items-center justify-between">
+            <span class="text-[11px] font-bold text-ink3 uppercase tracking-wider">Konfiguration</span>
+            <span class="text-[10px] text-ink3/50">Skatterådets sats 2026</span>
+          </div>
+          <div class="p-5">
+            <div class="grid grid-cols-2 gap-3 mb-4">
+              <div>
+                <div class="text-[11px] font-semibold text-ink3 uppercase tracking-wider mb-2">Erhvervs-km pr. md.</div>
+                <div class="flex items-center gap-2 bg-white/[.06] rounded-lg p-3 border-[1.5px] border-cyan/30 focus-within:border-cyan/50 transition-colors">
+                  <input id="kmInp" type="number" inputmode="numeric" value="1250"
+                    class="flex-1 font-mono text-xl font-semibold text-cyan2 bg-transparent border-none outline-none w-full" style="-webkit-appearance:none"
+                    oninput="onKmChange()">
+                  <span class="text-[11px] text-ink3">km</span>
+                </div>
+              </div>
+              <div>
+                <div class="text-[11px] font-semibold text-ink3 uppercase tracking-wider mb-2">Sats pr. km</div>
+                <div class="flex items-center gap-2 bg-white/[.06] rounded-lg p-3 border-[1.5px] border-white/[.08] focus-within:border-cyan/40 transition-colors">
+                  <input id="rateInp" type="number" inputmode="decimal" value="3.94"
+                    class="flex-1 font-mono text-xl font-semibold text-ink bg-transparent border-none outline-none w-full" style="-webkit-appearance:none"
+                    oninput="onKmChange()">
+                  <span class="text-[11px] text-ink3">kr.</span>
+                </div>
+              </div>
+            </div>
+            <!-- Skatteeffekt -->
+            <div class="rounded-xl p-4 mb-3" style="background:rgba(34,211,238,.06);border:1px solid rgba(34,211,238,.18)">
+              <div class="text-[10px] font-semibold text-cyan2 uppercase tracking-wider mb-3">Skatteeffekt af kørsel</div>
+              <div class="grid grid-cols-3 gap-3">
+                <div>
+                  <div class="text-[10px] text-ink3 mb-1">Fradragsbeløb</div>
+                  <div class="font-mono text-base font-semibold text-ink" id="driveMonthly">—</div>
+                  <div class="text-[10px] text-ink3 mt-0.5" id="driveYearly">—/år</div>
+                </div>
+                <div>
+                  <div class="text-[10px] text-ink3 mb-1">Skattebesparelse</div>
+                  <div class="font-mono text-base font-semibold text-lime2" id="driveSkattebes">—</div>
+                  <div class="text-[10px] text-ink3 mt-0.5">~35,1% af fradrag</div>
+                </div>
+                <div>
+                  <div class="text-[10px] text-ink3 mb-1">Nettoomkostning</div>
+                  <div class="font-mono text-base font-semibold text-coral2" id="driveNetto">—</div>
+                  <div class="text-[10px] text-ink3 mt-0.5">efter skattebes.</div>
+                </div>
+              </div>
+            </div>
+            <!-- Info box -->
+            <div class="rounded-lg p-3" style="background:rgba(163,230,53,.05);border:1px solid rgba(163,230,53,.15)">
+              <div class="text-xs text-lime2 font-semibold mb-1">ℹ️ Sådan virker km-fradraget</div>
+              <div class="text-[11px] text-ink3 leading-relaxed">
+                Km-fradraget reducerer dit <b class="text-ink2">virksomhedsoverskud</b> — ikke din private løn direkte.
+                Du sparer ~35,1% i skat af fradraget. <b class="text-lime2">Jo mere du kører erhvervsrelateret, jo mere sparer du.</b>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Trip list + totals -->
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <div class="text-[11px] font-semibold text-ink3 uppercase tracking-wider">Kørselslogbog</div>
+            <button onclick="openTripModal()" class="flex items-center gap-1.5 px-4 py-2 rounded-full bg-cyan text-bg text-xs font-bold cursor-pointer hover:brightness-110 transition">
+              <span class="text-sm">＋</span> Ny kørsel
+            </button>
+          </div>
+          <div id="tripList" class="flex flex-col gap-2 mb-3"></div>
+          <div id="tripEmpty" class="hidden border-[1.5px] border-dashed border-white/[.12] rounded-2xl p-7 text-center text-ink3 text-sm mb-3">
+            <div class="text-3xl mb-2.5">🚗</div>
+            Ingen kørsler endnu.<br>Tryk <b>+ Ny kørsel</b> for at tilføje.
+          </div>
+          <div class="glass overflow-hidden mb-3 hidden" id="driveSummaryCard">
+            <div class="px-5 py-3 bg-white/[.03] border-b border-white/[.04] text-[11px] font-bold text-ink3 uppercase tracking-wider">Månedsoversigt</div>
+            <div id="driveSummaryRows"></div>
+          </div>
+          <div class="rounded-2xl p-5 flex justify-between items-center"
+               style="background:linear-gradient(135deg,rgba(34,211,238,.14),rgba(8,145,178,.1));border:1px solid rgba(34,211,238,.25)">
+            <div>
+              <div class="text-[11px] text-cyan2 font-semibold uppercase tracking-wider mb-1">Total fradrag (logbog)</div>
+              <div class="font-mono text-2xl font-semibold text-white" id="driveTotalFradrag">0 kr.</div>
+            </div>
+            <div class="text-right">
+              <div class="text-[11px] text-ink3 mb-1">Skattebes. fra logbog</div>
+              <div class="font-mono text-base text-lime2" id="driveTotalSkattebes">0 kr.</div>
+              <div class="text-[10px] text-ink3 mt-0.5" id="driveTripCount">0 kørsler</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════ PANE 6: FIRMAUDGIFTER ══════════════════════ -->
+    <section class="page-section hidden" id="p6">
+      <div class="flex items-baseline justify-between mb-6">
+        <div>
+          <h1 class="font-display text-3xl font-black tracking-tight">Firmaudgifter</h1>
+          <p class="text-sm text-ink3 mt-1">Registrer dine erhvervsmæssige udgifter. De trækkes fra dit overskud og reducerer automatisk din skat.</p>
+        </div>
+        <div class="text-xs font-semibold bg-white/[.04] border border-white/[.07] text-ink3 rounded-full px-3 py-1" id="firmaTag">— fradrag/md.</div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <!-- Expense list -->
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <div class="text-[11px] font-semibold text-ink3 uppercase tracking-wider">Driftsudgifter</div>
+            <button onclick="openFirmaModal()" class="flex items-center gap-1.5 px-4 py-2 rounded-full bg-lime text-bg text-xs font-bold cursor-pointer hover:brightness-110 transition">
+              <span class="text-sm">＋</span> Tilføj udgift
+            </button>
+          </div>
+          <div id="firmaExpList" class="flex flex-col gap-2 mb-3"></div>
+          <div id="firmaEmpty" class="border-[1.5px] border-dashed border-white/[.12] rounded-2xl p-7 text-center text-ink3 text-sm mb-3">
+            <div class="text-3xl mb-2.5">🧾</div>
+            Ingen firmaudgifter endnu.<br>Tryk <b>+ Tilføj udgift</b> for at starte.
+          </div>
+          <div class="glass overflow-hidden hidden mb-3" id="firmaEffect">
+            <div class="px-5 py-3 bg-white/[.03] border-b border-white/[.04] flex items-center justify-between">
+              <span class="text-[11px] font-bold text-ink3 uppercase tracking-wider">Skatteeffekt</span>
+              <span class="text-[10px] text-ink3/50">Reducerer virksomhedens overskud</span>
+            </div>
+            <div id="firmaEffectRows"></div>
+          </div>
+        </div>
+
+        <!-- Rejse/diæter + Fradragskategorier -->
+        <div>
+          <!-- Rejse toggle -->
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <div class="text-[11px] font-semibold text-ink3 uppercase tracking-wider">Diæter & Rejseudgifter</div>
+              <div class="text-[10px] text-ink3 mt-0.5">Erhvervsmæssig rejse denne måned</div>
+            </div>
+            <div id="rejseToggle" onclick="toggleRejse()" class="w-[46px] h-[26px] rounded-full cursor-pointer relative transition-all flex-shrink-0 select-none"
+                 style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1)">
+              <div id="rejseToggleKnob" class="absolute top-[3px] left-[3px] w-[18px] h-[18px] rounded-full transition-all" style="background:#475569"></div>
+            </div>
+          </div>
+
+          <div id="rejseSection" class="hidden flex-col gap-3 mb-4">
+            <!-- Hero -->
+            <div class="rounded-2xl p-4 relative overflow-hidden" style="background:linear-gradient(135deg,rgba(56,189,248,.12),rgba(14,165,233,.08));border:1px solid rgba(56,189,248,.25)">
+              <div class="text-[11px] font-semibold uppercase tracking-wider mb-1" style="color:rgba(125,211,252,.7)">✈️ Samlet rejsefradrag denne måned</div>
+              <div class="font-mono text-2xl font-semibold text-white tracking-tight" id="rejseTotalFrad">0 kr.</div>
+              <div class="text-[10px] mt-1" style="color:rgba(125,211,252,.5)">fratrækkes virksomhedens overskud direkte</div>
+            </div>
+
+            <!-- Antal dage -->
+            <div class="glass p-4">
+              <div class="text-[11px] font-semibold text-ink3 uppercase tracking-wider mb-2.5">📅 Antal dage væk hjemmefra</div>
+              <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2 bg-white/[.06] rounded-lg p-2.5 flex-1 border-[1.5px] border-transparent focus-within:border-sky2/40 transition-colors">
+                  <input type="number" inputmode="numeric" id="rejseDage" value="0" min="0" max="31"
+                    class="font-mono text-xl font-semibold text-ink bg-transparent border-none outline-none w-16" style="-webkit-appearance:none"
+                    oninput="updateRejse()">
+                  <span class="text-xs text-ink3">dage</span>
+                </div>
+                <div class="flex gap-1.5">
+                  <div onclick="setRejseDage(7)" class="pill text-xs !px-3 !py-2">7d</div>
+                  <div onclick="setRejseDage(14)" class="pill text-xs !px-3 !py-2">14d</div>
+                  <div onclick="setRejseDage(30)" class="pill text-xs !px-3 !py-2">30d</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Diæter -->
+            <div class="glass p-4">
+              <div class="flex items-center justify-between mb-2.5">
+                <div>
+                  <div class="text-[11px] font-semibold text-ink3 uppercase tracking-wider">🍽️ Diæter (fortæring)</div>
+                  <div class="text-[10px] text-ink3 mt-0.5">Statens standardsats — ingen kvitteringer nødvendige</div>
+                </div>
+                <div class="font-mono text-base font-semibold text-lime2" id="rejseDiaetTotal">0 kr.</div>
+              </div>
+              <div class="bg-white/[.06] rounded-lg p-2.5 text-xs text-ink3 leading-relaxed mb-2">
+                <span class="text-lime2 font-bold" id="rejseDage2">0</span> dage ×
+                <span class="text-lime2 font-bold">625 kr.</span> =
+                <span class="text-lime2 font-bold" id="rejseDiaetCalc">0 kr.</span>
+                <span> · Kræver >25 km fra hjemmet + overnatning</span>
+              </div>
+              <div class="flex items-center gap-2 mt-1.5">
+                <span class="text-[11px] text-ink3">Tilpas sats:</span>
+                <div class="bg-white/[.06] border border-white/[.08] rounded-lg px-2.5 py-1.5 flex items-center gap-1.5">
+                  <input type="number" id="rejseDiaetSats" value="625" min="0"
+                    class="font-mono text-sm font-semibold text-ink bg-transparent border-none outline-none w-11" style="-webkit-appearance:none"
+                    oninput="updateRejse()">
+                  <span class="text-[11px] text-ink3">kr./dag</span>
+                </div>
+                <div onclick="document.getElementById('rejseDiaetSats').value=625;updateRejse()" class="text-[10px] text-cyan2 cursor-pointer select-none">↺ nulstil</div>
+              </div>
+            </div>
+
+            <!-- Transport -->
+            <div class="glass p-4">
+              <div class="text-[11px] font-semibold text-ink3 uppercase tracking-wider mb-2.5">✈️ Transport (fly, tog, færge)</div>
+              <div class="flex items-center gap-2 bg-white/[.06] rounded-lg p-3 border-[1.5px] border-transparent focus-within:border-sky2/40 transition-colors">
+                <input type="number" inputmode="numeric" id="rejseTransport" placeholder="0" min="0"
+                  class="font-mono text-xl font-semibold text-ink bg-transparent border-none outline-none flex-1" style="-webkit-appearance:none"
+                  oninput="updateRejse()">
+                <span class="text-xs text-ink3">kr. · 100% fradrag</span>
+              </div>
+            </div>
+
+            <!-- Logi -->
+            <div class="glass p-4">
+              <div class="flex items-center justify-between mb-2.5">
+                <div class="text-[11px] font-semibold text-ink3 uppercase tracking-wider">🏨 Logi / hotel</div>
+                <div class="flex gap-1.5">
+                  <div id="logiBtn0" onclick="setLogiMode(0)" class="pill text-[10px] !px-2.5 !py-1 active">Faktisk</div>
+                  <div id="logiBtn1" onclick="setLogiMode(1)" class="pill text-[10px] !px-2.5 !py-1">Standardsats</div>
+                </div>
+              </div>
+              <div id="logiFactual" class="flex items-center gap-2 bg-white/[.06] rounded-lg p-3 border-[1.5px] border-transparent focus-within:border-sky2/40 transition-colors">
+                <input type="number" inputmode="numeric" id="rejseLogi" placeholder="0" min="0"
+                  class="font-mono text-xl font-semibold text-ink bg-transparent border-none outline-none flex-1" style="-webkit-appearance:none"
+                  oninput="updateRejse()">
+                <span class="text-xs text-ink3">kr. total · 100% fradrag</span>
+              </div>
+              <div id="logiStandard" class="hidden bg-white/[.06] rounded-lg p-2.5 text-xs text-ink3">
+                <span class="text-lime2 font-bold" id="rejseDage3">0</span> nætter ×
+                <span class="text-lime2 font-bold">238 kr.</span> =
+                <span class="text-lime2 font-bold" id="rejseLogiStdCalc">0 kr.</span>
+              </div>
+            </div>
+
+            <!-- Breakdown -->
+            <div class="glass overflow-hidden">
+              <div class="px-5 py-3 bg-white/[.03] border-b border-white/[.04] text-[11px] font-bold text-ink3 uppercase tracking-wider">Rejsefradrag — opsummering</div>
+              <div class="trow alt"><div class="flex-1"><div class="text-sm text-ink">🍽️ Diæter</div><div class="text-[11px] text-ink3">Standardsats, ingen kvitteringer</div></div><div class="font-mono text-[13px] text-lime2 ml-3" id="rbDiaet">0 kr.</div></div>
+              <div class="trow"><div class="flex-1"><div class="text-sm text-ink">✈️ Transport</div><div class="text-[11px] text-ink3">100% fradragsberettiget</div></div><div class="font-mono text-[13px] text-lime2 ml-3" id="rbTransport">0 kr.</div></div>
+              <div class="trow alt"><div class="flex-1"><div class="text-sm text-ink">🏨 Logi</div><div class="text-[11px] text-ink3">100% fradragsberettiget</div></div><div class="font-mono text-[13px] text-lime2 ml-3" id="rbLogi">0 kr.</div></div>
+              <div class="trow foot"><div class="flex-1"><div class="text-[15px] font-extrabold text-ink">Samlet rejsefradrag</div></div><div class="font-mono text-base font-semibold text-lime2 ml-3" id="rbTotal">0 kr.</div></div>
+            </div>
+
+            <div class="rounded-lg p-3 text-xs text-ink3 leading-relaxed" style="background:rgba(56,189,248,.06);border:1px solid rgba(56,189,248,.18)">
+              ℹ️ <b class="text-sky2">Husk:</b> Kun udgifter du <em>selv</em> betaler kan fratrækkes. Gem altid dokumentation for formål og periode.
+            </div>
+          </div>
+
+          <!-- Fradragskategorier guide -->
+          <div class="glass overflow-hidden">
+            <div class="px-5 py-3 bg-white/[.03] border-b border-white/[.04] flex items-center justify-between">
+              <span class="text-[11px] font-bold text-ink3 uppercase tracking-wider">Fradragskategorier 2026</span>
+              <span class="text-[10px] text-ink3/50">Kilde: SKAT.dk</span>
+            </div>
+            <div class="trow"><div class="flex-1"><div class="text-sm text-ink">💻 Hardware & software</div><div class="text-[11px] text-ink3">Under 36.000 kr. fuldt fradrag</div></div><div class="font-mono text-[13px] text-lime2 ml-3">100%</div></div>
+            <div class="trow alt"><div class="flex-1"><div class="text-sm text-ink">📱 Telefon & internet</div><div class="text-[11px] text-ink3">Beskat af fri telefon (3.500 kr./år)</div></div><div class="font-mono text-[13px] text-lime2 ml-3">100%</div></div>
+            <div class="trow"><div class="flex-1"><div class="text-sm text-ink">📢 Markedsføring</div><div class="text-[11px] text-ink3">Annoncer, hjemmeside, visitkort</div></div><div class="font-mono text-[13px] text-lime2 ml-3">100%</div></div>
+            <div class="trow alt"><div class="flex-1"><div class="text-sm text-ink">🤝 Repræsentation</div><div class="text-[11px] text-ink3">Forretningslunsher, gaver — kun 25%</div></div><div class="font-mono text-[13px] text-amber2 ml-3">25%</div></div>
+            <div class="trow"><div class="flex-1"><div class="text-sm text-ink">🎓 Efteruddannelse</div><div class="text-[11px] text-ink3">Direkte relateret til drift</div></div><div class="font-mono text-[13px] text-lime2 ml-3">100%</div></div>
+            <div class="trow alt"><div class="flex-1"><div class="text-sm text-ink">📋 Revisor & regnskab</div><div class="text-[11px] text-ink3">Bogføring, revisor</div></div><div class="font-mono text-[13px] text-lime2 ml-3">100%</div></div>
+            <div class="trow"><div class="flex-1"><div class="text-sm text-ink">🛡️ Erhvervsforsikring</div><div class="text-[11px] text-ink3">Ansvarsforsikring mv.</div></div><div class="font-mono text-[13px] text-lime2 ml-3">100%</div></div>
+            <div class="trow alt"><div class="flex-1"><div class="text-sm text-ink">🏠 Hjemmekontor</div><div class="text-[11px] text-ink3">Sjældent godkendt</div></div><div class="font-mono text-[13px] text-coral2 ml-3">0-50%</div></div>
+            <div class="trow"><div class="flex-1"><div class="text-sm text-ink">✈️ Rejser & overnatning</div><div class="text-[11px] text-ink3">Erhvervsmæssige rejser</div></div><div class="font-mono text-[13px] text-lime2 ml-3">100%</div></div>
+            <div class="trow alt"><div class="flex-1"><div class="text-sm text-ink">🛒 Varekøb</div><div class="text-[11px] text-ink3">Direkte relateret</div></div><div class="font-mono text-[13px] text-lime2 ml-3">100%</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════ PANE 7: ÅRSPROJEKTION ══════════════════════ -->
+    <section class="page-section hidden" id="p7">
+      <div class="mb-6">
+        <h1 class="font-display text-3xl font-black tracking-tight">Årsprojektion</h1>
+        <p class="text-sm text-ink3 mt-1">Juster omsætningen pr. måned og se live hvordan året former sig.</p>
+      </div>
+
+      <!-- Preset buttons -->
+      <div class="flex items-center gap-3 mb-5 flex-wrap">
+        <span class="text-xs font-semibold text-ink3 uppercase tracking-wider">Forudindstillinger:</span>
+        <button onclick="applyYearPreset('stille')" class="pill text-xs">😓 Stille år</button>
+        <button onclick="applyYearPreset('normal')" class="pill text-xs">📊 Normalt år</button>
+        <button onclick="applyYearPreset('godt')" class="pill text-xs">🚀 Godt år</button>
+        <button onclick="applyYearPreset('tour')" class="pill text-xs active">🎸 Tour-sæson</button>
+        <button onclick="applyYearPreset('reset')" class="pill text-xs">↺ Nulstil</button>
+      </div>
+
+      <!-- Month sliders -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3 mb-6" id="yearSliders"></div>
+
+      <!-- Annual summary -->
+      <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
+        <div class="glass p-4 relative overflow-hidden stat-stripe" style="--stripe-color:#22d3ee">
+          <div class="text-[10px] font-semibold text-ink3 uppercase tracking-wider mb-1">Total omsætning</div>
+          <div class="font-mono text-lg font-semibold text-cyan2 tracking-tight" id="ypTotalOms">—</div>
+          <div class="text-[10px] text-ink3 mt-0.5">inkl. moms</div>
+        </div>
+        <div class="glass p-4 relative overflow-hidden stat-stripe" style="--stripe-color:#a3e635">
+          <div class="text-[10px] font-semibold text-ink3 uppercase tracking-wider mb-1">Total netto</div>
+          <div class="font-mono text-lg font-semibold text-lime2 tracking-tight" id="ypTotalNetto">—</div>
+          <div class="text-[10px] text-ink3 mt-0.5">efter skat</div>
+        </div>
+        <div class="glass p-4 relative overflow-hidden stat-stripe" style="--stripe-color:#8b5cf6">
+          <div class="text-[10px] font-semibold text-ink3 uppercase tracking-wider mb-1">Total skat</div>
+          <div class="font-mono text-lg font-semibold text-violet2 tracking-tight" id="ypTotalSkat">—</div>
+          <div class="text-[10px] text-ink3 mt-0.5">AM + indkomst</div>
+        </div>
+        <div class="glass p-4 relative overflow-hidden stat-stripe" style="--stripe-color:#f59e0b">
+          <div class="text-[10px] font-semibold text-ink3 uppercase tracking-wider mb-1">Total moms</div>
+          <div class="font-mono text-lg font-semibold text-amber2 tracking-tight" id="ypTotalMoms">—</div>
+          <div class="text-[10px] text-ink3 mt-0.5">til SKAT</div>
+        </div>
+        <div class="glass p-4 relative overflow-hidden stat-stripe" style="--stripe-color:#fb7185">
+          <div class="text-[10px] font-semibold text-ink3 uppercase tracking-wider mb-1">Gns. rådighedsbeløb</div>
+          <div class="font-mono text-lg font-semibold text-coral2 tracking-tight" id="ypAvgRaad">—</div>
+          <div class="text-[10px] text-ink3 mt-0.5">pr. måned</div>
+        </div>
+      </div>
+
+      <!-- Year chart -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div class="glass p-5">
+          <div class="flex items-baseline justify-between mb-4">
+            <div class="text-sm font-bold text-ink">Netto & rådighedsbeløb</div>
+            <div class="text-[11px] text-ink3">Din projektion</div>
+          </div>
+          <div class="flex gap-1 items-end h-36" id="ypBars"></div>
+          <div class="flex gap-4 mt-3">
+            <div class="flex items-center gap-1.5 text-[11px] text-ink2"><div class="w-2 h-2 rounded-sm bg-cyan"></div>Netto</div>
+            <div class="flex items-center gap-1.5 text-[11px] text-ink2"><div class="w-2 h-2 rounded-sm bg-lime"></div>Rådighedsbeløb</div>
+          </div>
+        </div>
+        <div class="glass overflow-hidden">
+          <div class="px-5 py-3 bg-white/[.03] border-b border-white/[.04] text-[11px] font-bold text-ink3 uppercase tracking-wider">Månedsoversigt</div>
+          <div id="ypMonthTable" class="max-h-[300px] overflow-y-auto"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════ PANE 8: VALUTAOMREGNER ══════════════════════ -->
+    <section class="page-section hidden" id="p8">
+      <div class="mb-6">
+        <h1 class="font-display text-3xl font-black tracking-tight">Valutaomregner</h1>
+        <p class="text-sm text-ink3 mt-1">Omregn fakturabeløb fra europæisk tour-arbejde til DKK.</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Converter -->
+        <div class="glass p-6">
+          <div class="text-[11px] font-semibold text-ink3 uppercase tracking-wider mb-3">Beløb i fremmed valuta</div>
+          <div class="flex gap-3 mb-5">
+            <div class="flex-1">
+              <div class="flex items-center gap-2 bg-white/[.06] rounded-xl p-4 border-[1.5px] border-transparent focus-within:border-cyan/40 transition-colors">
+                <input id="fxAmount" type="number" inputmode="decimal" placeholder="1000" value="1000"
+                  class="font-mono text-3xl font-semibold text-ink bg-transparent border-none outline-none w-full" style="-webkit-appearance:none"
+                  oninput="convertCurrency()">
+              </div>
+            </div>
+            <div>
+              <select id="fxCurrency" onchange="convertCurrency()"
+                class="h-full px-4 rounded-xl bg-white/[.06] border border-white/[.08] text-ink font-semibold text-base cursor-pointer outline-none" style="min-width:90px">
+                <option value="EUR" selected>🇪🇺 EUR</option>
+                <option value="GBP">🇬🇧 GBP</option>
+                <option value="SEK">🇸🇪 SEK</option>
+                <option value="NOK">🇳🇴 NOK</option>
+                <option value="USD">🇺🇸 USD</option>
+                <option value="CHF">🇨🇭 CHF</option>
+                <option value="PLN">🇵🇱 PLN</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Arrow -->
+          <div class="flex justify-center my-3">
+            <div class="w-10 h-10 rounded-full bg-white/[.06] flex items-center justify-center text-lg text-ink3">↓</div>
+          </div>
+
+          <!-- Result -->
+          <div class="rounded-2xl p-5 mb-4" style="background:linear-gradient(135deg,rgba(34,211,238,.12),rgba(8,145,178,.08));border:1px solid rgba(34,211,238,.25)">
+            <div class="text-[11px] font-semibold uppercase tracking-wider mb-1 text-cyan2/70">Beløb i DKK</div>
+            <div class="font-mono text-4xl font-semibold text-white tracking-tight" id="fxResult">—</div>
+            <div class="text-xs text-ink3 mt-1" id="fxRate">—</div>
+          </div>
+
+          <!-- Quick actions -->
+          <div class="flex gap-2">
+            <button onclick="fxToOms()" class="flex-1 py-3 rounded-xl bg-white/[.06] border border-white/[.08] text-sm font-semibold text-ink3 cursor-pointer hover:bg-white/[.08] hover:text-ink transition text-center">
+              📊 Brug som omsætning
+            </button>
+            <button onclick="fxAddMoms()" class="flex-1 py-3 rounded-xl bg-cyan/10 border border-cyan/20 text-sm font-semibold text-cyan2 cursor-pointer hover:bg-cyan/15 transition text-center">
+              ＋ Tilføj moms (25%)
+            </button>
+          </div>
+        </div>
+
+        <!-- Rates table + info -->
+        <div class="flex flex-col gap-5">
+          <div class="glass overflow-hidden">
+            <div class="px-5 py-3 bg-white/[.03] border-b border-white/[.04] flex items-center justify-between">
+              <span class="text-[11px] font-bold text-ink3 uppercase tracking-wider">Valutakurser → DKK</span>
+              <button onclick="fetchFxRates()" class="text-[10px] text-cyan2 cursor-pointer hover:underline">↻ Opdater</button>
+            </div>
+            <div id="fxRatesTable"></div>
+            <div class="px-5 py-2 bg-white/[.02] border-t border-white/[.04] text-[10px] text-ink4" id="fxRateSource">Fallback-kurser · Opdater for live data</div>
+          </div>
+
+          <div class="glass p-5">
+            <div class="text-sm font-bold text-ink mb-2">💡 Tip til fakturering i udlandet</div>
+            <div class="text-xs text-ink3 leading-relaxed space-y-2">
+              <p>Når du fakturerer i EUR/GBP, skal du <b class="text-ink2">omregne til DKK</b> på fakturadatoen. Brug Nationalbankens dagskurs.</p>
+              <p>Momssats afhænger af kundens land og momsregistrering. <b class="text-lime2">B2B i EU: reverse charge (0% moms).</b></p>
+              <p>Husk at medtage den omregnede DKK-omsætning i din danske momsangivelse.</p>
+            </div>
+          </div>
+
+          <!-- Conversion history -->
+          <div class="glass overflow-hidden">
+            <div class="px-5 py-3 bg-white/[.03] border-b border-white/[.04] text-[11px] font-bold text-ink3 uppercase tracking-wider">Seneste omregninger</div>
+            <div id="fxHistory" class="max-h-[200px] overflow-y-auto">
+              <div class="p-5 text-center text-ink3 text-sm">Ingen omregninger endnu</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════ PANE 9: KM-BEREGNER ══════════════════════ -->
+    <section class="page-section hidden" id="p9">
+      <div class="mb-6">
+        <h1 class="font-display text-3xl font-black tracking-tight">Km-beregner</h1>
+        <p class="text-sm text-ink3 mt-1">Beregn afstand mellem byer og tilføj direkte til din kørselslogbog.</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Calculator -->
+        <div>
+          <div class="glass p-6 mb-4">
+            <div class="text-[11px] font-semibold text-ink3 uppercase tracking-wider mb-3">Beregn rute</div>
+            <div class="grid grid-cols-2 gap-3 mb-4">
+              <div>
+                <div class="text-[11px] font-semibold text-ink3 uppercase tracking-wider mb-2">Fra</div>
+                <select id="kmFrom" onchange="calcKmRoute()"
+                  class="w-full px-4 py-3 rounded-xl bg-white/[.06] border border-white/[.08] text-ink font-medium text-sm cursor-pointer outline-none">
+                </select>
+              </div>
+              <div>
+                <div class="text-[11px] font-semibold text-ink3 uppercase tracking-wider mb-2">Til</div>
+                <select id="kmTo" onchange="calcKmRoute()"
+                  class="w-full px-4 py-3 rounded-xl bg-white/[.06] border border-white/[.08] text-ink font-medium text-sm cursor-pointer outline-none">
+                </select>
+              </div>
+            </div>
+
+            <!-- Custom city inputs -->
+            <div class="flex items-center gap-2 mb-4">
+              <input id="kmCustomFrom" type="text" placeholder="Eller skriv by..." class="field-inp text-sm !py-2.5 flex-1">
+              <span class="text-ink3">→</span>
+              <input id="kmCustomTo" type="text" placeholder="Eller skriv by..." class="field-inp text-sm !py-2.5 flex-1">
+              <button onclick="lookupCustomRoute()" class="pill text-xs !py-2.5 whitespace-nowrap">🔍 Søg</button>
+            </div>
+
+            <!-- Result -->
+            <div class="rounded-2xl p-5 mb-4" style="background:linear-gradient(135deg,rgba(163,230,53,.12),rgba(101,163,13,.08));border:1px solid rgba(163,230,53,.25)" id="kmResultBox">
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="text-[11px] font-semibold uppercase tracking-wider mb-1" style="color:rgba(190,242,100,.7)">Afstand (estimeret)</div>
+                  <div class="font-mono text-3xl font-semibold text-white tracking-tight" id="kmResultDist">—</div>
+                  <div class="text-xs mt-1" style="color:rgba(190,242,100,.5)" id="kmResultRoute">Vælg en rute</div>
+                </div>
+                <div class="text-right">
+                  <div class="text-[11px] text-ink3 mb-1">Fradrag</div>
+                  <div class="font-mono text-lg font-semibold text-lime2" id="kmResultFrad">—</div>
+                  <div class="text-[10px] text-ink3 mt-0.5" id="kmResultRound">—</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Round trip + add -->
+            <div class="flex items-center gap-3">
+              <label class="flex items-center gap-2 cursor-pointer select-none">
+                <input type="checkbox" id="kmRoundTrip" checked onchange="calcKmRoute()" class="w-4 h-4 rounded accent-cyan cursor-pointer">
+                <span class="text-sm text-ink">Tur/retur</span>
+              </label>
+              <div class="flex-1"></div>
+              <button onclick="kmAddToLog()" class="flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-cyan text-bg text-sm font-bold cursor-pointer hover:brightness-110 transition">
+                ＋ Tilføj til kørselslog
+              </button>
+            </div>
+          </div>
+
+          <!-- Custom location manager -->
+          <div class="glass p-5">
+            <div class="flex items-center justify-between mb-3">
+              <div class="text-[11px] font-semibold text-ink3 uppercase tracking-wider">Dine steder</div>
+              <button onclick="openAddLocationModal()" class="text-xs text-cyan2 cursor-pointer hover:underline">＋ Tilføj sted</button>
+            </div>
+            <div id="customLocations" class="flex flex-col gap-1.5"></div>
+          </div>
+        </div>
+
+        <!-- Saved routes -->
+        <div>
+          <div class="glass overflow-hidden mb-4">
+            <div class="px-5 py-3 bg-white/[.03] border-b border-white/[.04] text-[11px] font-bold text-ink3 uppercase tracking-wider">Hyppige ruter fra Roskilde</div>
+            <div id="presetRoutes"></div>
+          </div>
+
+          <div class="glass p-5">
+            <div class="text-sm font-bold text-ink mb-2">ℹ️ Om beregningen</div>
+            <div class="text-xs text-ink3 leading-relaxed space-y-2">
+              <p>Afstandene er baseret på <b class="text-ink2">vejafstande</b> fra kendte ruter. For ukendte ruter bruges fugleflugt × 1,35 som estimat.</p>
+              <p>Husk at SKAT kræver <b class="text-lime2">faktisk kørte kilometer</b> — brug din bils kilometertæller som dokumentation.</p>
+              <p>Km-beregner er et hjælpeværktøj til estimering. Den erstatter ikke din logbog.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ═══════════════════ MODALS ═══════════════════ -->
+<!-- TRIP MODAL -->
+<div class="modal-overlay" id="tripOverlay" onclick="closeTripModal()"></div>
+<div class="modal-panel" id="tripModal" onclick="event.stopPropagation()">
+  <div class="font-display text-xl font-extrabold mb-1" id="tripModalTitle">Ny kørsel</div>
+  <div class="text-sm text-ink3 mb-5">Registrer en erhvervskørsel til fradraget</div>
+  <div class="text-[11px] font-semibold text-ink3 uppercase tracking-wider mb-2">Formål</div>
+  <input class="field-inp mb-3" id="tPurpose" type="text" placeholder="f.eks. Kundemøde i København">
+  <div class="grid grid-cols-2 gap-3 mb-3">
+    <div>
+      <div class="text-[11px] font-semibold text-ink3 uppercase tracking-wider mb-2">Fra</div>
+      <input class="field-inp" id="tFrom" type="text" placeholder="f.eks. Roskilde">
+    </div>
+    <div>
+      <div class="text-[11px] font-semibold text-ink3 uppercase tracking-wider mb-2">Til</div>
+      <input class="field-inp" id="tTo" type="text" placeholder="f.eks. København">
+    </div>
+  </div>
+  <div class="grid grid-cols-2 gap-3 mb-3">
+    <div>
+      <div class="text-[11px] font-semibold text-ink3 uppercase tracking-wider mb-2">Kilometer</div>
+      <input class="field-inp" id="tKm" type="number" inputmode="decimal" placeholder="65">
+    </div>
+    <div>
+      <div class="text-[11px] font-semibold text-ink3 uppercase tracking-wider mb-2">Dato</div>
+      <input class="field-inp" id="tDate" type="date">
+    </div>
+  </div>
+  <div class="text-[11px] font-semibold text-ink3 uppercase tracking-wider mb-2">Kategori</div>
+  <div class="flex gap-2 flex-wrap mb-4" id="catGrid"></div>
+  <button class="w-full py-3.5 rounded-xl bg-cyan text-bg font-display text-base font-extrabold cursor-pointer border-none outline-none transition hover:brightness-110" style="box-shadow:0 4px 20px rgba(34,211,238,.25)" onclick="saveTrip()">Gem kørsel</button>
+</div>
+
+<!-- GOAL MODAL -->
+<div class="modal-overlay" id="goalOverlay" onclick="closeGoalModal()"></div>
+<div class="modal-panel" id="goalModal" onclick="event.stopPropagation()">
+  <div class="font-display text-xl font-extrabold mb-1" id="modalTitle">Nyt opsparingsmål</div>
+  <div class="text-sm text-ink3 mb-5">Sæt et mål og se hvornår du når det</div>
+  <div class="text-[11px] font-semibold text-ink3 uppercase tracking-wider mb-2">Navn på mål</div>
+  <input class="field-inp mb-3" id="mName" type="text" placeholder="f.eks. Ferie til Japan">
+  <div class="grid grid-cols-3 gap-3 mb-3">
+    <div>
+      <div class="text-[11px] font-semibold text-ink3 uppercase tracking-wider mb-2">Målbeløb (kr.)</div>
+      <input class="field-inp" id="mTarget" type="number" inputmode="numeric" placeholder="25000">
+    </div>
+    <div>
+      <div class="text-[11px] font-semibold text-ink3 uppercase tracking-wider mb-2">Allerede sparet</div>
+      <input class="field-inp" id="mSaved" type="number" inputmode="numeric" placeholder="0">
+    </div>
+    <div>
+      <div class="text-[11px] font-semibold text-ink3 uppercase tracking-wider mb-2">Månedlig (kr.)</div>
+      <input class="field-inp" id="mMonthly" type="number" inputmode="numeric" placeholder="2000">
+    </div>
+  </div>
+  <div class="text-[11px] font-semibold text-ink3 uppercase tracking-wider mb-2">Ikon</div>
+  <div class="grid grid-cols-10 gap-2 mb-4" id="emojiGrid"></div>
+  <button class="w-full py-3.5 rounded-xl bg-cyan text-bg font-display text-base font-extrabold cursor-pointer border-none outline-none transition hover:brightness-110" style="box-shadow:0 4px 20px rgba(34,211,238,.25)" onclick="saveGoal()">Gem mål</button>
+</div>
+
+<!-- FIRMA MODAL -->
+<div class="modal-overlay" id="firmaOverlay" onclick="closeFirmaModal()"></div>
+<div class="modal-panel" id="firmaModal" onclick="event.stopPropagation()">
+  <div class="font-display text-xl font-extrabold mb-1" id="firmaModalTitle">Ny firmaudgift</div>
+  <div class="text-sm text-ink3 mb-5">Tilføj en fradragsberettiget driftsudgift</div>
+  <div class="text-[11px] font-semibold text-ink3 uppercase tracking-wider mb-2">Beskrivelse</div>
+  <input class="field-inp mb-3" id="feDesc" type="text" placeholder="f.eks. Adobe Creative Cloud">
+  <div class="text-[11px] font-semibold text-ink3 uppercase tracking-wider mb-2">Beløb pr. måned (kr.)</div>
+  <input class="field-inp mb-3" id="feAmount" type="number" inputmode="numeric" placeholder="199">
+  <div class="text-[11px] font-semibold text-ink3 uppercase tracking-wider mb-2">Kategori & fradragsprocent</div>
+  <div id="feCatGrid" class="flex flex-col gap-2 mb-1"></div>
+  <div id="feRepNote" class="hidden rounded-lg p-3 text-xs mt-2 mb-1" style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);color:#fcd34d">
+    ⚠️ Repræsentation: kun 25% er fradragsberettiget. Resten er en privatudgift.
+  </div>
+  <button class="w-full py-3.5 rounded-xl bg-cyan text-bg font-display text-base font-extrabold cursor-pointer border-none outline-none transition hover:brightness-110 mt-4" style="box-shadow:0 4px 20px rgba(34,211,238,.25)" id="firmaSaveBtn" onclick="saveFirmaExp()">Gem udgift</button>
+</div>
+
+<!-- ═══════════════════ JAVASCRIPT ═══════════════════ -->
+<script>
+// ════════════════════════════════════════════
+// CONSTANTS
+// ════════════════════════════════════════════
+const ECOLS=['#22d3ee','#a3e635','#f59e0b','#fb7185','#a78bfa','#34d399','#fb923c','#e879f9','#38bdf8'];
+const EMOJIS=['🏖','🚗','🏠','💍','🎓','✈️','💻','📱','🎸','🏋','🌍','🛥','🏔','🎯','💰','🛍','🐕','👶','🏡','🎁'];
+const FIRMA_OMK         = 2000;
+const AM_SATS           = 0.08;
+const BUNDSKAT          = 0.1201;
+const KOMM_SKAT         = 0.2520;
+const KIRKE_SKAT        = 0.0084;
+const KOMM_KIRKE        = KOMM_SKAT + KIRKE_SKAT;
+const PERSONFRADRAG_MD  = 54100 / 12;
+const BESK_FRADRAG_PCT  = 0.1275;
+const BESK_FRADRAG_MAX  = 63300;
+const KM_LAV_SATS       = 2.28;
+const MONTHS=['Jan','Feb','Mar','Apr','Maj','Jun','Jul','Aug','Sep','Okt','Nov','Dec'];
+const MONTH_OMS=[55,50,55,60,65,85,90,85,75,65,60,70].map(v=>v*1000);
+const SCENS=[
+  {e:'😓',n:'Pessimistisk',desc:'Stille måned',o:40000},
+  {e:'📊',n:'Normal',desc:'Basis',o:60000},
+  {e:'🚀',n:'God måned',desc:'Over snit',o:75000},
+  {e:'☀️',n:'Sommer',desc:'Top sæson',o:85000},
+];
+const DEF_EXP=[
+  {id:'hus',ico:'🏠',name:'Husleje',desc:'Roskilde',val:8100},
+  {id:'bil',ico:'🚗',name:'Tesla lease',desc:'Model 3 LR + 20k udb.(engang)',val:4700},
+  {id:'mad',ico:'🛒',name:'Dagligvarer',desc:'Mad & husholdning',val:3500},
+  {id:'ops',ico:'💾',name:'Opsparing',desc:'Anbefalet for selvstændige',val:2000},
+  {id:'for',ico:'🛡️',name:'Forsikringer',desc:'Bil + indbo + sundhed',val:1200},
+  {id:'abo',ico:'🎵',name:'Abonnementer',desc:'Streaming, apps etc.',val:1000},
+  {id:'clv',ico:'⚡',name:'Clever One',desc:'Inkl. ladeboks',val:799},
+  {id:'par',ico:'🅿️',name:'Parkering',desc:'& diverse',val:400},
+  {id:'mob',ico:'📱',name:'Mobil & net',desc:'Tlf. + internet',val:400},
+];
+const DEF_GOALS=[
+  {id:'g1',ico:'🏖',name:'Sommerferie',target:30000,saved:8000,monthly:2000},
+  {id:'g2',ico:'💻',name:'Ny arbejdscomputer',target:15000,saved:3500,monthly:1500},
+];
+
+let S={oms:60000,exp:JSON.parse(JSON.stringify(DEF_EXP)),goals:JSON.parse(JSON.stringify(DEF_GOALS)),activeScen:1,
+  rejseOn:false,rejseDage:0,rejseDiaetSats:625,rejseTransport:0,rejseLogi:0,rejseLogiMode:0};
+let logiMode=0;
+let curTab=0, editGoalId=null, selectedEmoji='🏖';
+
+// ════════════════════════════════════════════
+// STORAGE
+// ════════════════════════════════════════════
+function save(){
+  try{
+    localStorage.setItem('oek26',JSON.stringify(S));
+    const d=document.getElementById('saveDot');d.classList.add('on');
+    setTimeout(()=>d.classList.remove('on'),2000);
+    document.getElementById('savedChip').textContent='Gemt '+new Date().toLocaleTimeString('da-DK',{hour:'2-digit',minute:'2-digit'});
+  }catch(e){}
+}
+function load(){
+  try{
+    const raw=localStorage.getItem('oek26');if(!raw)return;
+    const p=JSON.parse(raw);
+    S.oms=p.oms||60000;S.activeScen=p.activeScen??1;
+    if(p.exp)S.exp=DEF_EXP.map(d=>{const s=p.exp.find(e=>e.id===d.id);return s?{...d,val:s.val}:d});
+    if(p.goals)S.goals=p.goals;
+    if(p.trips)S.trips=p.trips;
+    if(p.driveKm!==undefined)S.driveKm=p.driveKm;
+    if(p.driveRate!==undefined)S.driveRate=p.driveRate;
+    if(p.firmaExps)S.firmaExps=p.firmaExps;
+    if(p.yearOms)S.yearOms=p.yearOms;
+    if(p.customLocations)S.customLocations=p.customLocations;
+    if(p.rejseOn!==undefined){
+      S.rejseOn=p.rejseOn; S.rejseDage=p.rejseDage||0;
+      S.rejseDiaetSats=p.rejseDiaetSats||625; S.rejseTransport=p.rejseTransport||0;
+      S.rejseLogi=p.rejseLogi||0; S.rejseLogiMode=p.rejseLogiMode||0;
+      logiMode=S.rejseLogiMode;
+    }
+  }catch(e){}
+}
+
+// ════════════════════════════════════════════
+// MATH
+// ════════════════════════════════════════════
+const DIAET_SATS_STD = 625;
+const LOGI_STD_SATS  = 238;
+
+function calcRejseFradrag(){
+  const dage=S.rejseDage??0,sats=S.rejseDiaetSats??DIAET_SATS_STD;
+  const diaet=Math.round(dage*sats),transp=S.rejseTransport??0;
+  let logi=0;
+  if(S.rejseLogiMode===0)logi=S.rejseLogi??0;
+  else logi=Math.round(dage*LOGI_STD_SATS);
+  return diaet+transp+logi;
+}
+function getRejseBreakdown(){
+  const dage=S.rejseDage??0,sats=S.rejseDiaetSats??DIAET_SATS_STD;
+  const diaet=Math.round(dage*sats),transp=S.rejseTransport??0;
+  let logi=0;
+  if(S.rejseLogiMode===0)logi=S.rejseLogi??0;
+  else logi=Math.round(dage*LOGI_STD_SATS);
+  return{diaet,transp,logi,total:diaet+transp+logi};
+}
+
+function calc(oms, exps) {
+  const moms=oms*0.2, exclM=oms*0.8;
+  const kmPrMd=S.driveKm??1250, kmRate=S.driveRate??3.94, kmPrAar=kmPrMd*12;
+  let kmFradrag;
+  if(kmPrAar<=20000){kmFradrag=Math.round(kmPrMd*kmRate);}
+  else{kmFradrag=Math.round((20000*kmRate+(kmPrAar-20000)*KM_LAV_SATS)/12);}
+  const FIRMA_CAT_PCT={software:1,telefon:1,markeds:1,repr:.25,kursus:1,revisor:1,forsikring:1,rejse:1,varer:1,andet:1};
+  const firmaUdgif=(S.firmaExps??[]).reduce((sum,e)=>sum+Math.round((e.amount||0)*(FIRMA_CAT_PCT[e.cat]??1)),0);
+  const rejseFrad=S.rejseOn?calcRejseFradrag():0;
+  const totalFrad=FIRMA_OMK+kmFradrag+firmaUdgif+rejseFrad;
+  const realUdgifter=FIRMA_OMK+firmaUdgif;
+  const ovsk=exclM-totalFrad;
+  const am=Math.round(Math.max(0,ovsk)*AM_SATS);
+  const persIndk=Math.max(0,ovsk)-am;
+  const beskFradAar=Math.min(Math.round(persIndk*12*BESK_FRADRAG_PCT),BESK_FRADRAG_MAX);
+  const beskFrad=Math.round(beskFradAar/12);
+  const persFrad=Math.round(PERSONFRADRAG_MD);
+  const bundBase=Math.max(0,persIndk-persFrad);
+  const bundSkat=Math.round(bundBase*BUNDSKAT);
+  const kommBase=Math.max(0,persIndk-beskFrad-persFrad);
+  const kommSkat=Math.round(kommBase*KOMM_KIRKE);
+  const skat=bundSkat+kommSkat;
+  const skattepligtig=kommBase;
+  const netto=Math.round(exclM-realUdgifter-am-skat);
+  const tot=exps.reduce((s,e)=>s+e.val,0);
+  const raad=netto-tot;
+  return{oms,exclM,moms,ovsk,am,persIndk,beskFrad,persFrad,skattepligtig,bundSkat,kommSkat,skat,netto,tot,raad,kmFradrag,totalFrad};
+}
+
+const FMT=new Intl.NumberFormat('da-DK',{maximumFractionDigits:0});
+function kr(n){return FMT.format(Math.round(n))+'\u00a0kr.';}
+function krs(n){return(n<0?'−':'')+FMT.format(Math.abs(Math.round(n)))+'\u00a0kr.';}
+function krShort(n){const a=Math.abs(Math.round(n));return(n<0?'-':'')+FMT.format(a>=10000?Math.round(a/1000):a)+(a>=10000?'k':'');}
+
+// Count-up animation
+const CC={};
+function countUp(id,target,ms=500,fmt=kr){
+  const el=document.getElementById(id);if(!el)return;
+  const from=CC[id]??target;CC[id]=target;
+  if(from===target){el.textContent=fmt(target);return;}
+  const t0=performance.now();
+  (function step(now){
+    const p=Math.min((now-t0)/ms,1),e=1-Math.pow(1-p,3);
+    el.textContent=fmt(from+(target-from)*e);
+    if(p<1)requestAnimationFrame(step);else el.textContent=fmt(target);
+  })(t0);
+}
+
+// ════════════════════════════════════════════
+// TAB NAVIGATION
+// ════════════════════════════════════════════
+const PANE_IDS=[0,1,2,3,4,5,6,7,8,9];
+function goTab(paneIdx){
+  curTab=paneIdx;
+  PANE_IDS.forEach(id=>{
+    const el=document.getElementById('p'+id);
+    if(el){el.classList.toggle('hidden',id!==paneIdx);if(id===paneIdx){el.classList.remove('page-section');void el.offsetWidth;el.classList.add('page-section');}}
+  });
+  document.querySelectorAll('.nav-item').forEach((el,i)=>{
+    // Nav order: 0,1,2,3,5,6,4, then 7,8,9
+    const navMap=[0,1,2,3,5,6,4,7,8,9];
+    el.classList.toggle('active',navMap[i]===paneIdx);
+  });
+  if(paneIdx===1)renderExp();
+  if(paneIdx===2)renderGoals();
+  if(paneIdx===3)renderScen();
+  if(paneIdx===5)renderDriving();
+  if(paneIdx===6)renderFirma();
+  if(paneIdx===7)renderYearProjection();
+  if(paneIdx===8)initFxPage();
+  if(paneIdx===9)initKmPage();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ════════════════════════════════════════════
+// RENDER DASHBOARD
+// ════════════════════════════════════════════
+function renderDash(){
+  const b=calc(S.oms,S.exp);
+  countUp('hsVal',b.raad);
+  countUp('stNetto',b.netto);
+  countUp('stUdg',b.tot);
+  countUp('stDay',Math.round(b.raad/30));
+  countUp('stYear',b.raad*12);
+
+  document.getElementById('hsSub').textContent=kr(b.raad*12)+' om året';
+  const pct=Math.round((b.raad/b.netto)*100);
+  document.getElementById('hsBadge').textContent=(pct>0?'+':'')+pct+'% af netto';
+  const badge=document.getElementById('hsBadge');
+  if(b.raad>5000){badge.style.background='rgba(163,230,53,.15)';badge.style.color='#bef264';}
+  else if(b.raad>0){badge.style.background='rgba(245,158,11,.15)';badge.style.color='#fcd34d';}
+  else{badge.style.background='rgba(251,113,133,.15)';badge.style.color='#fda4af';}
+
+  document.getElementById('tOms').textContent=kr(b.oms);
+  document.getElementById('tMoms').textContent=krs(-b.moms);
+  document.getElementById('tExcl').textContent=kr(b.exclM);
+
+  const fradEl=document.getElementById('tFradrag');
+  const fradDesc=document.getElementById('tFradragDesc');
+  if(fradEl)fradEl.textContent='−'+FMT.format(b.totalFrad)+'\u00a0kr.';
+  if(fradDesc){
+    const firmaUdg=(S.firmaExps??[]).reduce((sum,e)=>sum+Math.round((e.amount||0)*({software:1,telefon:1,markeds:1,repr:.25,kursus:1,revisor:1,forsikring:1,rejse:1,varer:1,andet:1}[e.cat]??1)),0);
+    const parts=['2.000'];
+    if(b.kmFradrag)parts.push(FMT.format(b.kmFradrag)+' km');
+    if(firmaUdg)parts.push(FMT.format(firmaUdg)+' firma');
+    fradDesc.textContent=parts.join(' + ')+' kr./md.';
+  }
+  document.getElementById('tOvsk').textContent=kr(b.ovsk);
+  document.getElementById('tAM').textContent=krs(-b.am);
+  const piEl=document.getElementById('tPersIndk');if(piEl)piEl.textContent=kr(b.persIndk);
+  const pfEl=document.getElementById('tPersFrad');if(pfEl)pfEl.textContent='+'+FMT.format(Math.round(b.persFrad))+'\u00a0kr.';
+  const bfEl=document.getElementById('tBeskFrad');if(bfEl)bfEl.textContent='+'+FMT.format(b.beskFrad)+'\u00a0kr.';
+  const spEl=document.getElementById('tSkattepligtig');if(spEl)spEl.textContent=kr(b.skattepligtig);
+  const bsEl=document.getElementById('tBundSkat');if(bsEl)bsEl.textContent=krs(-b.bundSkat);
+  const ksEl=document.getElementById('tKommSkat');if(ksEl)ksEl.textContent=krs(-b.kommSkat);
+  document.getElementById('tSkat').textContent=krs(-b.skat);
+  document.getElementById('tNetto').textContent=kr(b.netto);
+
+  // Transfer
+  const firmaIndMoms=Math.round((FIRMA_OMK+(S.firmaExps??[]).reduce((s,e)=>s+(e.amount||0),0))*0.2);
+  const momsNetto=Math.round(b.moms-firmaIndMoms);
+  const realFirmaOmk=FIRMA_OMK+(S.firmaExps??[]).reduce((s,e)=>s+(e.amount||0),0);
+  const overfoersel=Math.round(b.oms-momsNetto-realFirmaOmk-b.am-b.skat);
+  countUp('thVal',overfoersel);
+  const thMoms=document.getElementById('thMoms'),thSkat=document.getElementById('thSkat'),thFirma=document.getElementById('thFirma');
+  if(thMoms)thMoms.textContent='−'+FMT.format(momsNetto)+'\u00a0kr.';
+  if(thSkat)thSkat.textContent='−'+FMT.format(b.am+b.skat)+'\u00a0kr.';
+  if(thFirma)thFirma.textContent='−'+FMT.format(realFirmaOmk)+'\u00a0kr.';
+
+  // Set aside
+  const firmaUdgTotal=FIRMA_OMK+(S.firmaExps??[]).reduce((s,e)=>s+(e.amount||0),0);
+  const indgMoms=Math.round(firmaUdgTotal*0.2);
+  const nettomoms=Math.round(b.moms-indgMoms);
+  const qtrMoms=nettomoms*3;
+
+  const ssMEl=document.getElementById('ssMoms');if(ssMEl)ssMEl.textContent=kr(nettomoms);
+  const ssQEl=document.getElementById('ssMomsQtr');if(ssQEl)ssQEl.textContent=kr(nettomoms)+' / kvartal';
+  const ssQTEl=document.getElementById('ssMomsQtrTot');if(ssQTEl)ssQTEl.textContent=kr(qtrMoms);
+
+  const ssSEl=document.getElementById('ssSkat');if(ssSEl)ssSEl.textContent=kr(b.am+b.skat);
+  const ssAEl=document.getElementById('ssAM');if(ssAEl)ssAEl.textContent=kr(b.am);
+  const ssIEl=document.getElementById('ssIndSkat');if(ssIEl)ssIEl.textContent=kr(b.skat);
+  const ssTEl=document.getElementById('ssSkatTot');if(ssTEl)ssTEl.textContent=kr(b.am+b.skat);
+  const ssTREl=document.getElementById('ssTotalRes');if(ssTREl)ssTREl.textContent=kr(nettomoms+b.am+b.skat);
+
+  const st=document.getElementById('statusEl');
+  if(b.raad>10000){st.style.background='rgba(163,230,53,.07)';st.style.borderColor='rgba(163,230,53,.22)';st.style.color='#bef264';document.getElementById('srIco').textContent='✅';document.getElementById('srTit').textContent='God økonomi';document.getElementById('srSub').textContent=kr(b.raad)+' tilbage hver måned';}
+  else if(b.raad>3000){st.style.background='rgba(245,158,11,.07)';st.style.borderColor='rgba(245,158,11,.22)';st.style.color='#fcd34d';document.getElementById('srIco').textContent='🟡';document.getElementById('srTit').textContent='Okay — lidt snævert';document.getElementById('srSub').textContent=kr(b.raad)+' til overs';}
+  else if(b.raad>0){st.style.background='rgba(245,158,11,.07)';st.style.borderColor='rgba(245,158,11,.22)';st.style.color='#fcd34d';document.getElementById('srIco').textContent='⚠️';document.getElementById('srTit').textContent='Meget snævert';document.getElementById('srSub').textContent='Pas på uforudsete udgifter';}
+  else{st.style.background='rgba(251,113,133,.07)';st.style.borderColor='rgba(251,113,133,.22)';st.style.color='#fda4af';document.getElementById('srIco').textContent='🔴';document.getElementById('srTit').textContent='Underskud!';document.getElementById('srSub').textContent='Mangler '+kr(Math.abs(b.raad))+' pr. måned';}
+
+  document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
+  [{v:40000,i:0},{v:60000,i:1},{v:75000,i:2},{v:85000,i:3}].forEach(({v,i})=>{
+    const pills=document.getElementById('pillRow')?.children;
+    if(pills&&S.oms===v)pills[i]?.classList.add('active');
+  });
+}
+
+// ════════════════════════════════════════════
+// EXPENSES
+// ════════════════════════════════════════════
+function renderExp(){
+  const list=document.getElementById('expList');list.innerHTML='';
+  S.exp.forEach((e,i)=>{
+    const r=document.createElement('div');
+    r.className='flex items-center p-4 gap-3 border-b border-white/[.04] transition hover:bg-white/[.02]';
+    r.innerHTML=`<span class="text-xl w-7 text-center flex-shrink-0">${e.ico}</span><div class="flex-1 min-w-0"><div class="text-sm text-ink font-semibold">${e.name}</div><div class="text-[11px] text-ink3">${e.desc}</div></div><div class="exp-field"><input class="exp-inp" type="number" inputmode="numeric" value="${e.val}" onchange="onExp(${i},this.value)" oninput="onExp(${i},this.value)"><span class="text-[11px] text-ink3">kr.</span></div>`;
+    list.appendChild(r);
+  });
+  const tot=S.exp.reduce((s,e)=>s+e.val,0);
+  const tf=document.createElement('div');
+  tf.className='flex items-center justify-between p-4 bg-white/[.03] border-t border-white/[.06]';
+  tf.innerHTML=`<span class="text-[15px] font-extrabold text-ink">Total</span><span class="font-mono text-base font-semibold text-coral2" id="expTotRow">${kr(tot)}</span>`;
+  list.appendChild(tf);
+  document.getElementById('expTotTag').textContent=kr(tot)+'/md.';
+  drawDonut();
+}
+function onExp(i,v){
+  S.exp[i].val=parseInt(v)||0;
+  const tot=S.exp.reduce((s,e)=>s+e.val,0);
+  const el=document.getElementById('expTotRow');if(el)el.textContent=kr(tot);
+  document.getElementById('expTotTag').textContent=kr(tot)+'/md.';
+  renderDash();drawDonut();debSave();
+}
+
+// ════════════════════════════════════════════
+// DONUT
+// ════════════════════════════════════════════
+function drawDonut(){
+  const c=document.getElementById('donut');if(!c)return;
+  const ctx=c.getContext('2d');
+  const tot=S.exp.reduce((s,e)=>s+e.val,0);
+  const W=130,cx=65,cy=65,R=56,inn=34;
+  ctx.clearRect(0,0,W,W);
+  let a=-Math.PI/2;
+  S.exp.forEach((e,i)=>{
+    const sl=(e.val/tot)*Math.PI*2;
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,R,a,a+sl);ctx.closePath();
+    ctx.fillStyle=ECOLS[i%ECOLS.length];ctx.fill();a+=sl;
+  });
+  const g=ctx.createRadialGradient(cx,cy,0,cx,cy,inn);
+  g.addColorStop(0,'#0b1020');g.addColorStop(1,'#0f1628');
+  ctx.beginPath();ctx.arc(cx,cy,inn,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+  document.getElementById('donutVal').textContent=FMT.format(Math.round(tot));
+  document.getElementById('donutYr').textContent=kr(tot*12)+'/år';
+  const leg=document.getElementById('legEl');if(!leg)return;leg.innerHTML='';
+  S.exp.forEach((e,i)=>{
+    const pct=Math.round((e.val/tot)*100);
+    const r=document.createElement('div');r.className='flex items-center justify-between';
+    r.innerHTML=`<div class="flex items-center gap-2.5"><div class="w-2 h-2 rounded-sm flex-shrink-0" style="background:${ECOLS[i%ECOLS.length]}"></div><span class="text-sm text-ink">${e.ico} ${e.name}</span></div><span class="font-mono text-[11px] text-ink2">${pct}% · ${FMT.format(e.val)}</span>`;
+    leg.appendChild(r);
+  });
+}
+
+// ════════════════════════════════════════════
+// GOALS
+// ════════════════════════════════════════════
+function renderGoals(){
+  const b=calc(S.oms,S.exp);
+  const list=document.getElementById('goalsList');list.innerHTML='';
+  let totalTarget=0,totalSaved=0;
+  S.goals.forEach(goal=>{totalTarget+=goal.target;totalSaved+=goal.saved;});
+  document.getElementById('savingsSummary').textContent=S.goals.length+' mål · '+kr(totalSaved)+' sparet';
+  S.goals.forEach((goal,i)=>{
+    const pct=Math.min(100,Math.round((goal.saved/goal.target)*100));
+    const remaining=Math.max(0,goal.target-goal.saved);
+    const monthsLeft=goal.monthly>0?Math.ceil(remaining/goal.monthly):null;
+    const etaTxt=monthsLeft!=null?(monthsLeft===0?'Nået! 🎉':monthsLeft+' mdr. tilbage'):'Ingen månedlig opsparing';
+    const barColor=pct>=100?'#a3e635':pct>60?'#22d3ee':pct>30?'#f59e0b':'#8b5cf6';
+    const card=document.createElement('div');
+    card.className='glass p-5 relative overflow-hidden';
+    card.innerHTML=`
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2.5"><span class="text-2xl">${goal.ico}</span><div><div class="text-[15px] font-bold text-ink">${goal.name}</div><div class="text-[11px] text-ink3">${kr(goal.monthly)}/md. · Mål: ${kr(goal.target)}</div></div></div>
+        <div class="text-lg text-ink3 cursor-pointer p-1 rounded-lg hover:bg-white/[.06] transition" onclick="openEditGoal(${i})">⋯</div>
+      </div>
+      <div class="mb-3">
+        <div class="h-2 bg-white/[.06] rounded-full overflow-hidden mb-2"><div class="h-full rounded-full transition-all duration-700" style="width:0%;background:${barColor}" id="gbar-${i}"></div></div>
+        <div class="flex justify-between text-xs"><span style="color:${barColor}">${kr(goal.saved)}</span><span class="text-ink3">${kr(goal.target)}</span></div>
+      </div>
+      <div class="flex items-center justify-between mb-3">
+        <div class="text-sm font-bold" style="color:${barColor}">${pct}%</div>
+        <div class="text-xs text-ink3">${etaTxt}</div>
+      </div>
+      <div class="flex gap-2">
+        <div class="gc-btn" onclick="depositGoal(${i},-500)">−500 kr.</div>
+        <div class="gc-btn primary" onclick="depositGoal(${i},500)">+500 kr.</div>
+        <div class="gc-btn primary" onclick="depositGoal(${i},${goal.monthly})">+${kr(goal.monthly)}</div>
+      </div>`;
+    list.appendChild(card);
+    setTimeout(()=>{const b=document.getElementById('gbar-'+i);if(b)b.style.width=pct+'%';},100+i*80);
+  });
+  // Overview table
+  const ov=document.getElementById('savingsOverview');ov.innerHTML='';
+  const header=document.createElement('div');
+  header.className='px-5 py-3 bg-white/[.03] border-b border-white/[.04] text-[11px] font-bold text-ink3 uppercase tracking-wider';
+  header.textContent='Opsparingsoversigt';ov.appendChild(header);
+  const monthly=S.goals.reduce((s,g)=>s+g.monthly,0);
+  [
+    ['Månedlig fri opsparing',kr(b.raad),'text-cyan2'],
+    ['Heraf afsat til mål',kr(monthly),'text-amber2'],
+    ['Resterende rådighedsbeløb',kr(b.raad-monthly),b.raad-monthly>0?'text-lime2':'text-coral2'],
+    ['Samlet sparet',kr(totalSaved),'text-lime2'],
+    ['Samlet mål',kr(totalTarget),'text-ink2'],
+  ].forEach(([k,v,col])=>{
+    const r=document.createElement('div');r.className='trow';
+    r.innerHTML=`<div class="flex-1 text-sm text-ink">${k}</div><div class="font-mono text-[13px] font-medium ${col} ml-3">${v}</div>`;
+    ov.appendChild(r);
+  });
+}
+function depositGoal(idx,amount){S.goals[idx].saved=Math.max(0,S.goals[idx].saved+amount);renderGoals();debSave();}
+
+// Goal Modal
+function openAddGoal(){editGoalId=null;selectedEmoji='🏖';document.getElementById('modalTitle').textContent='Nyt opsparingsmål';document.getElementById('mName').value='';document.getElementById('mTarget').value='';document.getElementById('mSaved').value='0';document.getElementById('mMonthly').value='1000';buildEmojiGrid();document.getElementById('goalOverlay').classList.add('open');document.getElementById('goalModal').classList.add('open');}
+function openEditGoal(i){editGoalId=i;const g=S.goals[i];selectedEmoji=g.ico;document.getElementById('modalTitle').textContent='Rediger mål';document.getElementById('mName').value=g.name;document.getElementById('mTarget').value=g.target;document.getElementById('mSaved').value=g.saved;document.getElementById('mMonthly').value=g.monthly;buildEmojiGrid();document.getElementById('goalOverlay').classList.add('open');document.getElementById('goalModal').classList.add('open');}
+function closeGoalModal(){document.getElementById('goalOverlay').classList.remove('open');document.getElementById('goalModal').classList.remove('open');}
+function buildEmojiGrid(){const grid=document.getElementById('emojiGrid');grid.innerHTML='';EMOJIS.forEach(e=>{const btn=document.createElement('div');btn.className='emoji-opt'+(e===selectedEmoji?' on':'');btn.textContent=e;btn.onclick=()=>{selectedEmoji=e;buildEmojiGrid();};grid.appendChild(btn);});}
+function saveGoal(){const name=document.getElementById('mName').value.trim();const target=parseInt(document.getElementById('mTarget').value)||0;const saved=parseInt(document.getElementById('mSaved').value)||0;const monthly=parseInt(document.getElementById('mMonthly').value)||0;if(!name||!target){alert('Udfyld navn og målbeløb');return;}if(editGoalId!=null){S.goals[editGoalId]={...S.goals[editGoalId],ico:selectedEmoji,name,target,saved,monthly};}else{S.goals.push({id:'g'+Date.now(),ico:selectedEmoji,name,target,saved,monthly});}closeGoalModal();renderGoals();save();}
+
+// ════════════════════════════════════════════
+// SCENARIOS & CHART
+// ════════════════════════════════════════════
+function renderScen(){
+  const list=document.getElementById('scenList');list.innerHTML='';
+  SCENS.forEach((s,i)=>{
+    const b=calc(s.o,S.exp);
+    const rc=b.raad>8000?'#bef264':b.raad>3000?'#67e8f9':b.raad>0?'#fcd34d':'#fda4af';
+    const badgeBg=b.raad>8000?'rgba(163,230,53,.12)':b.raad>3000?'rgba(34,211,238,.12)':b.raad>0?'rgba(245,158,11,.12)':'rgba(251,113,133,.12)';
+    const statusTxt=b.raad>8000?'🟢 God luft':b.raad>3000?'🔵 Okay':b.raad>0?'🟡 Snævert':'🔴 Underskud';
+    const card=document.createElement('div');
+    card.className='glass p-5 flex items-center gap-4 cursor-pointer transition-all hover:border-cyan/30'+(i===S.activeScen?' !border-cyan/40 !bg-cyan/[.05]':'');
+    card.innerHTML=`<div class="w-12 h-12 rounded-xl bg-white/[.06] flex items-center justify-center text-2xl flex-shrink-0">${s.e}</div><div class="flex-1 min-w-0"><div class="text-[15px] font-bold text-ink">${s.n}</div><div class="text-xs text-ink3">${s.o.toLocaleString('da-DK')} kr./md. · ${s.desc}</div><div class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold mt-1.5" style="background:${badgeBg};color:${rc}">${statusTxt}</div></div><div class="text-right"><div class="font-mono text-sm font-semibold text-cyan2">${kr(b.netto)}</div><div class="font-mono text-xs mt-1" style="color:${rc}">${kr(b.raad)}</div></div>`;
+    card.onclick=()=>{S.activeScen=i;S.oms=s.o;document.getElementById('omsInp').value=s.o;renderAll();save();};
+    list.appendChild(card);
+  });
+
+  const sc=SCENS[S.activeScen],b=calc(sc.o,S.exp);
+  document.getElementById('scenDetTitle').textContent=sc.n+' — detaljer';
+  const det=document.getElementById('scenDet');det.innerHTML='';
+  [
+    ['Omsætning inkl. moms',kr(b.oms),'text-cyan2'],['Moms (20%)',krs(-b.moms),'text-coral2'],['Excl. moms',kr(b.exclM),'text-ink2'],
+    ['Firmaomk. + km-fradrag','−'+FMT.format(b.totalFrad)+'\u00a0kr.','text-coral2'],['Virksomhedens overskud',kr(b.ovsk),'text-ink2'],
+    ['AM-bidrag (8%)',krs(-b.am),'text-coral2'],['Personlig indkomst',kr(b.persIndk),'text-ink2'],
+    ['Personfradrag','+'+FMT.format(Math.round(b.persFrad))+'\u00a0kr.','text-lime2'],
+    ['Beskæftigelsesfradrag','+'+FMT.format(b.beskFrad)+'\u00a0kr.','text-lime2'],
+    ['Beskatningsgrundlag',kr(b.skattepligtig),'text-ink2'],['Bundskat (12,01%)',krs(-b.bundSkat),'text-coral2'],
+    ['Komm.+kirkeskat (26,04%)',krs(-b.kommSkat),'text-coral2'],['Samlet skat',krs(-b.skat),'text-coral2'],
+    ['Netto efter skat',kr(b.netto),'text-cyan2',true],['Faste udgifter',kr(b.tot),'text-coral2'],
+    ['Rådighedsbeløb',kr(b.raad),b.raad>0?'text-lime2':'text-coral2',true],['Pr. år',kr(b.raad*12),'text-amber2'],
+  ].forEach(([k,v,col,sep],idx)=>{
+    const r=document.createElement('div');r.className='trow'+(idx%2?' alt':'');
+    if(sep)r.style.borderTop='1px solid rgba(255,255,255,.06)';
+    r.innerHTML=`<div class="flex-1 text-sm${sep?' font-extrabold':''} text-ink">${k}</div><div class="font-mono text-[13px] font-medium ${col} ml-3">${v}</div>`;
+    det.appendChild(r);
+  });
+  renderChart();
+}
+function renderChart(){
+  const el=document.getElementById('barsEl');if(!el)return;el.innerHTML='';
+  const vals=MONTH_OMS.map(oms=>{const b=calc(oms,S.exp);return{netto:b.netto,raad:b.raad};});
+  const maxV=Math.max(...vals.map(v=>Math.max(v.netto,0)));
+  const H=112;
+  vals.forEach((v,i)=>{
+    const nH=Math.max(0,Math.round((v.netto/maxV)*H));
+    const rH=Math.max(0,Math.round((Math.max(0,v.raad)/maxV)*H));
+    const summer=i>=5&&i<=8;
+    const col=document.createElement('div');col.className='flex-1 flex flex-col items-center gap-1';
+    const bo=document.createElement('div');bo.className='w-full rounded-t-md relative overflow-hidden';bo.style.cssText=`height:${H}px;background:rgba(255,255,255,.03)`;
+    const bfn=document.createElement('div');bfn.className='absolute bottom-0 left-0 right-0 rounded-t-md';
+    bfn.style.cssText=`background:${summer?'rgba(163,230,53,.22)':'rgba(34,211,238,.2)'};height:0;transition:height .9s ${i*.04}s cubic-bezier(.34,1.1,.64,1)`;
+    const bfr=document.createElement('div');bfr.className='absolute bottom-0 left-0 right-0 rounded-t-md';
+    bfr.style.cssText=`background:${v.raad>0?(summer?'#a3e635':'#22d3ee'):'#fb7185'};height:0;transition:height .9s ${i*.04+.1}s cubic-bezier(.34,1.1,.64,1);opacity:.9`;
+    bo.appendChild(bfn);bo.appendChild(bfr);
+    const lbl=document.createElement('div');lbl.className='text-[9px] text-ink3';lbl.textContent=MONTHS[i];
+    const val=document.createElement('div');val.className='font-mono text-[8px]';
+    val.textContent=krShort(v.raad);val.style.color=v.raad>=0?'#67e8f9':'#fda4af';
+    col.append(bo,lbl,val);el.appendChild(col);
+    setTimeout(()=>{bfn.style.height=nH+'px';bfr.style.height=rH+'px';},100);
+  });
+}
+
+// ════════════════════════════════════════════
+// DRIVING
+// ════════════════════════════════════════════
+const TRIP_CATS=[
+  {id:'kunde',ico:'🤝',lbl:'Kundemøde'},{id:'levering',ico:'📦',lbl:'Levering'},
+  {id:'bank',ico:'🏦',lbl:'Bank/revisor'},{id:'indkob',ico:'🛒',lbl:'Erhvervsindkøb'},
+  {id:'kursus',ico:'🎓',lbl:'Kursus'},{id:'kontor',ico:'🏢',lbl:'Kontor'},
+  {id:'lager',ico:'🏭',lbl:'Lager'},{id:'andet',ico:'🚗',lbl:'Andet'},
+];
+let editTripId=null,selTripCat='kunde';
+
+function onKmChange(){
+  S.driveKm=parseFloat(document.getElementById('kmInp').value)||0;
+  S.driveRate=parseFloat(document.getElementById('rateInp').value)||3.94;
+  const kmPrAar=S.driveKm*12;
+  let monthly;
+  if(kmPrAar<=20000)monthly=Math.round(S.driveKm*S.driveRate);
+  else monthly=Math.round((20000*S.driveRate+(kmPrAar-20000)*KM_LAV_SATS)/12);
+  const yearly=monthly*12;
+  const skattebes=Math.round(monthly*0.92*(BUNDSKAT+KOMM_KIRKE));
+  const nettoOmk=monthly-skattebes;
+  document.getElementById('driveMonthly').textContent=kr(monthly);
+  document.getElementById('driveYearly').textContent=kr(yearly)+'/år';
+  const sbEl=document.getElementById('driveSkattebes');if(sbEl)sbEl.textContent='+'+FMT.format(skattebes)+' kr.';
+  const dnEl=document.getElementById('driveNetto');if(dnEl)dnEl.textContent=kr(nettoOmk);
+  renderDash();debSave();
+}
+
+function renderDriving(){
+  document.getElementById('kmInp').value=S.driveKm??1250;
+  document.getElementById('rateInp').value=S.driveRate??3.94;
+  const km=S.driveKm??1250,rate=S.driveRate??3.94,kmPrAar=km*12;
+  let monthly;
+  if(kmPrAar<=20000)monthly=Math.round(km*rate);else monthly=Math.round((20000*rate+(kmPrAar-20000)*KM_LAV_SATS)/12);
+  document.getElementById('driveMonthly').textContent=kr(monthly);
+  document.getElementById('driveYearly').textContent=kr(monthly*12);
+  const trips=S.trips??[];
+  const totalKm=trips.reduce((s,t)=>s+(t.km||0),0);
+  document.getElementById('driveTag').textContent=trips.length?totalKm.toLocaleString('da-DK')+' km · '+trips.length+' kørsler':'Ingen kørsler endnu';
+  const listEl=document.getElementById('tripList'),emptyEl=document.getElementById('tripEmpty');listEl.innerHTML='';
+  if(!trips.length){emptyEl.classList.remove('hidden');document.getElementById('driveSummaryCard').classList.add('hidden');}
+  else{
+    emptyEl.classList.add('hidden');
+    const sorted=[...trips].sort((a,b)=>new Date(b.date)-new Date(a.date));
+    sorted.forEach(trip=>{
+      const cat=TRIP_CATS.find(c=>c.id===trip.cat)??TRIP_CATS[TRIP_CATS.length-1];
+      const frad=Math.round((trip.km||0)*rate);
+      const dateStr=trip.date?new Date(trip.date+'T12:00').toLocaleDateString('da-DK',{day:'numeric',month:'short'}):'—';
+      const card=document.createElement('div');
+      card.className='glass p-4 flex items-center gap-3';
+      card.innerHTML=`<div class="w-10 h-10 rounded-xl bg-white/[.06] flex items-center justify-center text-lg flex-shrink-0">${cat.ico}</div><div class="flex-1 min-w-0"><div class="text-sm font-semibold text-ink truncate">${trip.purpose||cat.lbl}</div><div class="text-[11px] text-ink3">${trip.from&&trip.to?trip.from+' → '+trip.to:cat.lbl} · ${dateStr}</div><div class="flex gap-2.5 mt-1"><span class="font-mono text-xs text-cyan2">${(trip.km||0).toLocaleString('da-DK')} km</span><span class="font-mono text-xs text-lime2">+${kr(frad)}</span></div></div><div class="flex flex-col gap-1.5 flex-shrink-0"><div onclick="editTrip('${trip.id}')" class="gc-btn text-[11px] text-center">Ret</div><div onclick="deleteTrip('${trip.id}')" class="gc-btn text-[11px] text-center !bg-coral/10 !border-coral/20 !text-coral2">Slet</div></div>`;
+      listEl.appendChild(card);
+    });
+    // Monthly summary
+    const byMonth={};trips.forEach(t=>{if(!t.date)return;const key=t.date.slice(0,7);if(!byMonth[key])byMonth[key]={km:0,count:0};byMonth[key].km+=t.km||0;byMonth[key].count+=1;});
+    const sumCard=document.getElementById('driveSummaryCard'),sumRows=document.getElementById('driveSummaryRows');
+    const keys=Object.keys(byMonth).sort().reverse();sumRows.innerHTML='';
+    keys.forEach(k=>{const[yr,mo]=k.split('-');const label=new Date(+yr,+mo-1,1).toLocaleDateString('da-DK',{month:'long',year:'numeric'});const frad=Math.round(byMonth[k].km*rate);const row=document.createElement('div');row.className='trow';row.innerHTML=`<div class="flex-1"><div class="text-sm text-ink">${label}</div><div class="text-[11px] text-ink3">${byMonth[k].count} kørsler · ${byMonth[k].km.toLocaleString('da-DK')} km</div></div><div class="font-mono text-[13px] text-lime2 ml-3">${kr(frad)}</div>`;sumRows.appendChild(row);});
+    sumCard.classList.remove('hidden');
+  }
+  const totalFrad=Math.round(totalKm*rate);
+  const totalSkat=Math.round(totalFrad*0.92*(BUNDSKAT+KOMM_KIRKE));
+  document.getElementById('driveTotalFradrag').textContent=kr(totalFrad);
+  const tsEl=document.getElementById('driveTotalSkattebes');if(tsEl)tsEl.textContent='+'+FMT.format(totalSkat)+' kr.';
+  const tcEl=document.getElementById('driveTripCount');if(tcEl)tcEl.textContent=trips.length+' kørsler';
+}
+
+// Trip modal
+function buildCatGrid(){
+  const grid=document.getElementById('catGrid');grid.innerHTML='';
+  TRIP_CATS.forEach(c=>{
+    const btn=document.createElement('div');
+    btn.className='pill text-xs flex flex-col items-center gap-1 !px-2 !py-2 min-w-[56px]'+(selTripCat===c.id?' active':'');
+    btn.innerHTML=`<span class="text-lg">${c.ico}</span><span class="text-[10px] font-semibold leading-tight text-center">${c.lbl}</span>`;
+    btn.onclick=()=>{selTripCat=c.id;buildCatGrid();};
+    grid.appendChild(btn);
+  });
+}
+function openTripModal(){editTripId=null;selTripCat='kunde';document.getElementById('tripModalTitle').textContent='Ny kørsel';document.getElementById('tPurpose').value='';document.getElementById('tFrom').value='';document.getElementById('tTo').value='';document.getElementById('tKm').value='';document.getElementById('tDate').value=new Date().toISOString().slice(0,10);buildCatGrid();document.getElementById('tripOverlay').classList.add('open');document.getElementById('tripModal').classList.add('open');}
+function editTrip(id){const trip=(S.trips??[]).find(t=>t.id===id);if(!trip)return;editTripId=id;selTripCat=trip.cat??'kunde';document.getElementById('tripModalTitle').textContent='Rediger kørsel';document.getElementById('tPurpose').value=trip.purpose??'';document.getElementById('tFrom').value=trip.from??'';document.getElementById('tTo').value=trip.to??'';document.getElementById('tKm').value=trip.km??'';document.getElementById('tDate').value=trip.date??new Date().toISOString().slice(0,10);buildCatGrid();document.getElementById('tripOverlay').classList.add('open');document.getElementById('tripModal').classList.add('open');}
+function closeTripModal(){document.getElementById('tripOverlay').classList.remove('open');document.getElementById('tripModal').classList.remove('open');}
+function saveTrip(){const km=parseFloat(document.getElementById('tKm').value);if(!km||km<=0){document.getElementById('tKm').focus();return;}const trip={id:editTripId??'tr'+Date.now(),purpose:document.getElementById('tPurpose').value.trim(),from:document.getElementById('tFrom').value.trim(),to:document.getElementById('tTo').value.trim(),km,date:document.getElementById('tDate').value,cat:selTripCat};if(!S.trips)S.trips=[];if(editTripId){S.trips=S.trips.map(t=>t.id===editTripId?trip:t);}else{S.trips.push(trip);}closeTripModal();renderDriving();save();}
+function deleteTrip(id){S.trips=(S.trips??[]).filter(t=>t.id!==id);renderDriving();save();}
+
+// ════════════════════════════════════════════
+// REJSE
+// ════════════════════════════════════════════
+function toggleRejse(){
+  S.rejseOn=!S.rejseOn;
+  const sec=document.getElementById('rejseSection'),tog=document.getElementById('rejseToggle'),knob=document.getElementById('rejseToggleKnob');
+  if(S.rejseOn){sec.style.display='flex';tog.style.background='#38bdf8';tog.style.borderColor='rgba(56,189,248,.5)';knob.style.transform='translateX(20px)';knob.style.background='#fff';}
+  else{sec.style.display='none';tog.style.background='rgba(255,255,255,.06)';tog.style.borderColor='rgba(255,255,255,.1)';knob.style.transform='translateX(0)';knob.style.background='#475569';}
+  updateRejse();save();
+}
+function setRejseDage(n){document.getElementById('rejseDage').value=n;updateRejse();}
+function setLogiMode(m){
+  logiMode=m;S.rejseLogiMode=m;
+  document.getElementById('logiBtn0').classList.toggle('active',m===0);
+  document.getElementById('logiBtn1').classList.toggle('active',m===1);
+  document.getElementById('logiFactual').style.display=m===0?'flex':'none';
+  document.getElementById('logiStandard').style.display=m===1?'block':'none';
+  updateRejse();
+}
+function updateRejse(){
+  S.rejseDage=parseInt(document.getElementById('rejseDage')?.value)||0;
+  S.rejseDiaetSats=parseFloat(document.getElementById('rejseDiaetSats')?.value)||DIAET_SATS_STD;
+  S.rejseTransport=parseFloat(document.getElementById('rejseTransport')?.value)||0;
+  S.rejseLogi=parseFloat(document.getElementById('rejseLogi')?.value)||0;
+  S.rejseLogiMode=logiMode;
+  const bd=getRejseBreakdown();
+  const d2=document.getElementById('rejseDage2');if(d2)d2.textContent=S.rejseDage;
+  const dc=document.getElementById('rejseDiaetCalc');if(dc)dc.textContent=kr(bd.diaet);
+  const dt=document.getElementById('rejseDiaetTotal');if(dt)dt.textContent=kr(bd.diaet);
+  const d3=document.getElementById('rejseDage3');if(d3)d3.textContent=S.rejseDage;
+  const ls=document.getElementById('rejseLogiStdCalc');if(ls)ls.textContent=kr(Math.round(S.rejseDage*LOGI_STD_SATS));
+  const rbD=document.getElementById('rbDiaet');if(rbD)rbD.textContent=kr(bd.diaet);
+  const rbT=document.getElementById('rbTransport');if(rbT)rbT.textContent=kr(bd.transp);
+  const rbL=document.getElementById('rbLogi');if(rbL)rbL.textContent=kr(bd.logi);
+  const rbTo=document.getElementById('rbTotal');if(rbTo)rbTo.textContent=kr(bd.total);
+  const hv=document.getElementById('rejseTotalFrad');if(hv)hv.textContent=kr(bd.total);
+  renderDash();debSave();
+}
+
+// ════════════════════════════════════════════
+// FIRMA
+// ════════════════════════════════════════════
+const FIRMA_CATS=[
+  {id:'software',ico:'💻',lbl:'Software & hardware',pct:1},{id:'telefon',ico:'📱',lbl:'Telefon & internet',pct:1},
+  {id:'markeds',ico:'📢',lbl:'Markedsføring & reklame',pct:1},{id:'repr',ico:'🤝',lbl:'Repræsentation',pct:.25},
+  {id:'kursus',ico:'🎓',lbl:'Kursus & efteruddannelse',pct:1},{id:'revisor',ico:'📋',lbl:'Revisor & regnskab',pct:1},
+  {id:'forsikring',ico:'🛡️',lbl:'Forsikring',pct:1},{id:'rejse',ico:'✈️',lbl:'Rejse & overnatning',pct:1},
+  {id:'varer',ico:'🛒',lbl:'Varekøb & materialer',pct:1},{id:'andet',ico:'🧾',lbl:'Andet erhvervsudgift',pct:1},
+];
+let editFirmaId=null,selFirmaCat='software';
+function getFirmaExps(){return S.firmaExps??[];}
+function calcFirmaFradrag(){return getFirmaExps().reduce((sum,e)=>{const cat=FIRMA_CATS.find(c=>c.id===e.cat)??FIRMA_CATS[FIRMA_CATS.length-1];return sum+Math.round((e.amount||0)*cat.pct);},0);}
+
+function renderFirma(){
+  const exps=getFirmaExps(),listEl=document.getElementById('firmaExpList'),emptyEl=document.getElementById('firmaEmpty'),effectEl=document.getElementById('firmaEffect');
+  if(!listEl)return;listEl.innerHTML='';
+  const totalFrad=calcFirmaFradrag();
+  const skattebes=Math.round(totalFrad*0.92*(BUNDSKAT+KOMM_KIRKE));
+  const tagEl=document.getElementById('firmaTag');if(tagEl)tagEl.textContent=exps.length?kr(totalFrad)+' fradrag/md.':'— fradrag/md.';
+  if(!exps.length){emptyEl.style.display='block';if(effectEl)effectEl.classList.add('hidden');}
+  else{
+    emptyEl.style.display='none';if(effectEl)effectEl.classList.remove('hidden');
+    exps.forEach((e,i)=>{
+      const cat=FIRMA_CATS.find(c=>c.id===e.cat)??FIRMA_CATS[FIRMA_CATS.length-1];
+      const fradrag=Math.round((e.amount||0)*cat.pct);
+      const card=document.createElement('div');
+      card.className='glass p-4 flex items-center gap-3';
+      card.innerHTML=`<div class="w-10 h-10 rounded-xl bg-white/[.06] flex items-center justify-center text-lg flex-shrink-0">${cat.ico}</div><div class="flex-1 min-w-0"><div class="text-sm font-semibold text-ink truncate">${e.desc||cat.lbl}</div><div class="text-[11px] text-ink3">${cat.lbl}${cat.pct<1?' · kun '+Math.round(cat.pct*100)+'% fradrag':''}</div><div class="flex gap-2.5 mt-1"><span class="font-mono text-xs text-coral2">${kr(e.amount||0)}/md.</span><span class="font-mono text-xs text-lime2">Fradrag: ${kr(fradrag)}</span></div></div><div class="flex flex-col gap-1.5 flex-shrink-0"><div onclick="editFirmaExp(${i})" class="gc-btn text-[11px] text-center">Ret</div><div onclick="deleteFirmaExp(${i})" class="gc-btn text-[11px] text-center !bg-coral/10 !border-coral/20 !text-coral2">Slet</div></div>`;
+      listEl.appendChild(card);
+    });
+    const rowsEl=document.getElementById('firmaEffectRows');
+    if(rowsEl){rowsEl.innerHTML='';
+      [['Samlet fradragsbeløb',kr(totalFrad),'text-ink2'],['Heraf AM-bidrag besparelse (8%)','+'+FMT.format(Math.round(totalFrad*0.08))+' kr.','text-lime2'],['Heraf indkomstskat besparelse (~34,7%)','+'+FMT.format(Math.round(totalFrad*0.92*0.3771-totalFrad*0.08))+' kr.','text-lime2'],['Samlet skattebesparelse pr. md.','+'+FMT.format(skattebes)+' kr.','text-lime2'],['Effektiv nettoomkostning pr. md.',kr(totalFrad-skattebes),'text-coral2']].forEach(([k,v,col],i)=>{
+        const r=document.createElement('div');r.className='trow'+(i%2?' alt':'');
+        r.innerHTML=`<div class="flex-1 text-sm text-ink">${k}</div><div class="font-mono text-[13px] font-medium ${col} ml-3">${v}</div>`;
+        rowsEl.appendChild(r);
+      });
+    }
+  }
+  renderDash();
+}
+function openFirmaModal(){editFirmaId=null;selFirmaCat='software';document.getElementById('firmaModalTitle').textContent='Ny firmaudgift';document.getElementById('feDesc').value='';document.getElementById('feAmount').value='';buildFirmaCatGrid();document.getElementById('firmaOverlay').classList.add('open');document.getElementById('firmaModal').classList.add('open');}
+function editFirmaExp(idx){const e=getFirmaExps()[idx];if(!e)return;editFirmaId=idx;selFirmaCat=e.cat||'software';document.getElementById('firmaModalTitle').textContent='Rediger udgift';document.getElementById('feDesc').value=e.desc||'';document.getElementById('feAmount').value=e.amount||'';buildFirmaCatGrid();document.getElementById('firmaOverlay').classList.add('open');document.getElementById('firmaModal').classList.add('open');}
+function deleteFirmaExp(idx){S.firmaExps=(S.firmaExps||[]).filter((_,i)=>i!==idx);renderFirma();save();}
+function closeFirmaModal(){document.getElementById('firmaOverlay').classList.remove('open');document.getElementById('firmaModal').classList.remove('open');}
+function buildFirmaCatGrid(){
+  const grid=document.getElementById('feCatGrid');if(!grid)return;grid.innerHTML='';
+  const note=document.getElementById('feRepNote');
+  FIRMA_CATS.forEach(c=>{
+    const btn=document.createElement('div');const sel=selFirmaCat===c.id;
+    btn.className='glass flex items-center gap-3 p-3 cursor-pointer transition-all select-none';
+    if(sel)btn.style.borderColor='rgba(34,211,238,.4)';
+    if(sel)btn.style.background='rgba(34,211,238,.06)';
+    btn.innerHTML=`<span class="text-lg">${c.ico}</span><div class="flex-1"><div class="text-sm font-semibold" style="color:${sel?'#67e8f9':'#f0f6ff'}">${c.lbl}</div></div><div class="font-mono text-sm font-semibold" style="color:${c.pct===1?'#bef264':'#fcd34d'}">${Math.round(c.pct*100)}%</div>`;
+    btn.onclick=()=>{selFirmaCat=c.id;buildFirmaCatGrid();if(note)note.style.display=c.id==='repr'?'block':'none';};
+    grid.appendChild(btn);
+  });
+}
+function saveFirmaExp(){
+  const amount=parseFloat(document.getElementById('feAmount').value);
+  if(!amount||amount<=0){document.getElementById('feAmount').focus();return;}
+  const exp={desc:document.getElementById('feDesc').value.trim(),amount,cat:selFirmaCat};
+  if(!S.firmaExps)S.firmaExps=[];
+  if(editFirmaId!=null)S.firmaExps[editFirmaId]=exp;else S.firmaExps.push(exp);
+  closeFirmaModal();renderFirma();save();
+}
+
+// ════════════════════════════════════════════
+// RENDER ALL
+// ════════════════════════════════════════════
+function renderAll(){renderDash();if(curTab===1)renderExp();if(curTab===2)renderGoals();if(curTab===3)renderScen();if(curTab===5)renderDriving();if(curTab===6)renderFirma();if(curTab===7)renderYearProjection();}
+let saveT;
+function debSave(){clearTimeout(saveT);saveT=setTimeout(save,700);}
+function onOms(){S.oms=parseFloat(document.getElementById('omsInp').value)||0;renderDash();debSave();}
+function setPill(v){S.oms=v;document.getElementById('omsInp').value=v;renderDash();save();}
+
+// ════════════════════════════════════════════
+// ÅRSPROJEKTION (pane 7)
+// ════════════════════════════════════════════
+const YEAR_PRESETS = {
+  stille: [40,35,40,45,40,50,55,50,45,40,35,40],
+  normal: [55,50,55,60,65,70,75,70,65,60,55,60],
+  godt:   [65,60,70,75,80,90,95,90,80,75,70,75],
+  tour:   [55,50,55,60,65,85,90,85,75,65,60,70],
+};
+if(!S.yearOms) S.yearOms = YEAR_PRESETS.tour.map(v=>v*1000);
+
+function applyYearPreset(key){
+  if(key==='reset') S.yearOms = YEAR_PRESETS.tour.map(v=>v*1000);
+  else if(YEAR_PRESETS[key]) S.yearOms = YEAR_PRESETS[key].map(v=>v*1000);
+  renderYearProjection();
+  debSave();
+}
+
+function renderYearProjection(){
+  const sliders=document.getElementById('yearSliders');sliders.innerHTML='';
+  const MNAMES=['Januar','Februar','Marts','April','Maj','Juni','Juli','August','September','Oktober','November','December'];
+  const MSHORT=['Jan','Feb','Mar','Apr','Maj','Jun','Jul','Aug','Sep','Okt','Nov','Dec'];
+
+  S.yearOms.forEach((oms,i)=>{
+    const b=calc(oms,S.exp);
+    const col=b.raad>8000?'text-lime2':b.raad>3000?'text-cyan2':b.raad>0?'text-amber2':'text-coral2';
+    const div=document.createElement('div');
+    div.className='glass p-4';
+    div.innerHTML=`
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-sm font-semibold text-ink">${MNAMES[i]}</span>
+        <span class="font-mono text-sm font-semibold ${col}">${kr(b.raad)}</span>
+      </div>
+      <input type="range" min="0" max="120000" step="5000" value="${oms}"
+        class="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+        style="background:linear-gradient(to right,#22d3ee ${oms/1200}%,rgba(255,255,255,.08) ${oms/1200}%);accent-color:#22d3ee"
+        oninput="S.yearOms[${i}]=+this.value;this.style.background='linear-gradient(to right,#22d3ee '+this.value/1200+'%,rgba(255,255,255,.08) '+this.value/1200+'%)';document.getElementById('ypOmsVal${i}').textContent=kr(+this.value);renderYearChart();debSave()">
+      <div class="flex justify-between mt-1">
+        <span class="text-[10px] text-ink3">0</span>
+        <span class="font-mono text-xs text-ink2" id="ypOmsVal${i}">${kr(oms)}</span>
+        <span class="text-[10px] text-ink3">120k</span>
+      </div>`;
+    sliders.appendChild(div);
+  });
+  renderYearChart();
+}
+
+function renderYearChart(){
+  const MSHORT=['Jan','Feb','Mar','Apr','Maj','Jun','Jul','Aug','Sep','Okt','Nov','Dec'];
+  let totalOms=0,totalNetto=0,totalSkat=0,totalMoms=0,totalRaad=0;
+  const vals=S.yearOms.map((oms,i)=>{
+    const b=calc(oms,S.exp);
+    totalOms+=oms;totalNetto+=b.netto;totalSkat+=(b.am+b.skat);totalMoms+=b.moms;totalRaad+=b.raad;
+    return{netto:b.netto,raad:b.raad,oms};
+  });
+
+  document.getElementById('ypTotalOms').textContent=kr(totalOms);
+  document.getElementById('ypTotalNetto').textContent=kr(totalNetto);
+  document.getElementById('ypTotalSkat').textContent=kr(totalSkat);
+  document.getElementById('ypTotalMoms').textContent=kr(totalMoms);
+  document.getElementById('ypAvgRaad').textContent=kr(Math.round(totalRaad/12));
+
+  // Bars
+  const el=document.getElementById('ypBars');if(!el)return;el.innerHTML='';
+  const maxV=Math.max(...vals.map(v=>Math.max(v.netto,0)),1);
+  const H=144;
+  vals.forEach((v,i)=>{
+    const nH=Math.max(0,Math.round((v.netto/maxV)*H));
+    const rH=Math.max(0,Math.round((Math.max(0,v.raad)/maxV)*H));
+    const summer=i>=5&&i<=8;
+    const col=document.createElement('div');col.className='flex-1 flex flex-col items-center gap-1';
+    const bo=document.createElement('div');bo.className='w-full rounded-t-md relative overflow-hidden';bo.style.cssText=`height:${H}px;background:rgba(255,255,255,.03)`;
+    const bfn=document.createElement('div');bfn.className='absolute bottom-0 left-0 right-0 rounded-t-md';
+    bfn.style.cssText=`background:${summer?'rgba(163,230,53,.22)':'rgba(34,211,238,.2)'};height:${nH}px;transition:height .6s cubic-bezier(.34,1.1,.64,1)`;
+    const bfr=document.createElement('div');bfr.className='absolute bottom-0 left-0 right-0 rounded-t-md';
+    bfr.style.cssText=`background:${v.raad>0?(summer?'#a3e635':'#22d3ee'):'#fb7185'};height:${rH}px;opacity:.9;transition:height .6s cubic-bezier(.34,1.1,.64,1)`;
+    bo.appendChild(bfn);bo.appendChild(bfr);
+    const lbl=document.createElement('div');lbl.className='text-[9px] text-ink3';lbl.textContent=MSHORT[i];
+    const val=document.createElement('div');val.className='font-mono text-[8px]';
+    val.textContent=krShort(v.raad);val.style.color=v.raad>=0?'#67e8f9':'#fda4af';
+    col.append(bo,lbl,val);el.appendChild(col);
+  });
+
+  // Table
+  const table=document.getElementById('ypMonthTable');table.innerHTML='';
+  vals.forEach((v,i)=>{
+    const b=calc(v.oms,S.exp);
+    const rc=b.raad>5000?'text-lime2':b.raad>0?'text-amber2':'text-coral2';
+    const row=document.createElement('div');row.className='trow'+(i%2?' alt':'');
+    row.innerHTML=`<div class="flex-1 text-sm text-ink">${MSHORT[i]}</div><div class="font-mono text-xs text-ink2 w-20 text-right">${kr(v.oms)}</div><div class="font-mono text-xs text-cyan2 w-20 text-right">${kr(b.netto)}</div><div class="font-mono text-xs ${rc} w-20 text-right">${kr(b.raad)}</div>`;
+    table.appendChild(row);
+  });
+}
+
+// ════════════════════════════════════════════
+// VALUTAOMREGNER (pane 8)
+// ════════════════════════════════════════════
+const FX_FALLBACK = {EUR:7.46,GBP:8.72,SEK:0.68,NOK:0.65,USD:6.89,CHF:7.91,PLN:1.73};
+let fxRates = {...FX_FALLBACK};
+let fxLive = false;
+let fxHistoryData = [];
+
+function initFxPage(){
+  renderFxRatesTable();
+  convertCurrency();
+}
+
+async function fetchFxRates(){
+  try{
+    const r=await fetch('https://api.frankfurter.app/latest?from=DKK');
+    const d=await r.json();
+    // Frankfurter gives DKK→X, we need X→DKK so invert
+    Object.keys(d.rates).forEach(k=>{
+      if(FX_FALLBACK[k]!==undefined) fxRates[k]=Math.round((1/d.rates[k])*10000)/10000;
+    });
+    fxLive=true;
+    document.getElementById('fxRateSource').textContent='Live kurser fra ECB · '+new Date().toLocaleTimeString('da-DK',{hour:'2-digit',minute:'2-digit'});
+    renderFxRatesTable();
+    convertCurrency();
+  }catch(e){
+    document.getElementById('fxRateSource').textContent='Kunne ikke hente live kurser — bruger fallback';
+  }
+}
+
+function renderFxRatesTable(){
+  const el=document.getElementById('fxRatesTable');el.innerHTML='';
+  const flags={EUR:'🇪🇺',GBP:'🇬🇧',SEK:'🇸🇪',NOK:'🇳🇴',USD:'🇺🇸',CHF:'🇨🇭',PLN:'🇵🇱'};
+  const names={EUR:'Euro',GBP:'Britiske pund',SEK:'Svenske kroner',NOK:'Norske kroner',USD:'US Dollar',CHF:'Schweizerfranc',PLN:'Polske zloty'};
+  Object.entries(fxRates).forEach(([cur,rate],i)=>{
+    const row=document.createElement('div');row.className='trow'+(i%2?' alt':'');
+    row.innerHTML=`<div class="flex-1 flex items-center gap-2"><span>${flags[cur]||''}</span><span class="text-sm text-ink">${cur}</span><span class="text-xs text-ink3">${names[cur]||''}</span></div><div class="font-mono text-sm font-medium text-cyan2">${rate.toFixed(4)} DKK</div>`;
+    el.appendChild(row);
+  });
+}
+
+function convertCurrency(){
+  const amount=parseFloat(document.getElementById('fxAmount')?.value)||0;
+  const cur=document.getElementById('fxCurrency')?.value||'EUR';
+  const rate=fxRates[cur]||1;
+  const dkk=Math.round(amount*rate);
+  document.getElementById('fxResult').textContent=kr(dkk);
+  document.getElementById('fxRate').textContent=`1 ${cur} = ${rate.toFixed(4)} DKK`+(fxLive?' (live)':' (estimat)');
+}
+
+function fxToOms(){
+  const amount=parseFloat(document.getElementById('fxAmount')?.value)||0;
+  const cur=document.getElementById('fxCurrency')?.value||'EUR';
+  const dkk=Math.round(amount*(fxRates[cur]||1));
+  const dkkMoms=Math.round(dkk*1.25);
+  S.oms=dkkMoms;
+  document.getElementById('omsInp').value=dkkMoms;
+  renderDash();save();
+  // Add to history
+  fxHistoryData.unshift({amount,cur,dkk,dkkMoms,time:new Date().toLocaleTimeString('da-DK',{hour:'2-digit',minute:'2-digit'})});
+  if(fxHistoryData.length>10)fxHistoryData.pop();
+  renderFxHistory();
+  goTab(0);
+}
+
+function fxAddMoms(){
+  const amount=parseFloat(document.getElementById('fxAmount')?.value)||0;
+  const cur=document.getElementById('fxCurrency')?.value||'EUR';
+  const dkk=Math.round(amount*(fxRates[cur]||1));
+  const dkkMoms=Math.round(dkk*1.25);
+  document.getElementById('fxResult').textContent=kr(dkkMoms);
+  document.getElementById('fxRate').textContent=`${kr(dkk)} excl. moms + 25% = ${kr(dkkMoms)} inkl. moms`;
+  fxHistoryData.unshift({amount,cur,dkk,dkkMoms,time:new Date().toLocaleTimeString('da-DK',{hour:'2-digit',minute:'2-digit'})});
+  if(fxHistoryData.length>10)fxHistoryData.pop();
+  renderFxHistory();
+}
+
+function renderFxHistory(){
+  const el=document.getElementById('fxHistory');if(!el)return;
+  if(!fxHistoryData.length){el.innerHTML='<div class="p-5 text-center text-ink3 text-sm">Ingen omregninger endnu</div>';return;}
+  el.innerHTML='';
+  fxHistoryData.forEach((h,i)=>{
+    const row=document.createElement('div');row.className='trow'+(i%2?' alt':'');
+    row.innerHTML=`<div class="flex-1"><div class="text-sm text-ink">${FMT.format(h.amount)} ${h.cur} → ${kr(h.dkk)}</div><div class="text-[10px] text-ink3">${h.time}${h.dkkMoms!==h.dkk?' · inkl. moms: '+kr(h.dkkMoms):''}</div></div>`;
+    el.appendChild(row);
+  });
+}
+
+// ════════════════════════════════════════════
+// KM-BEREGNER (pane 9)
+// ════════════════════════════════════════════
+const CITY_COORDS = {
+  'Roskilde':{lat:55.6415,lng:12.0803},
+  'København':{lat:55.6761,lng:12.5683},
+  'Odense':{lat:55.3960,lng:10.3886},
+  'Aarhus':{lat:56.1629,lng:10.2039},
+  'Aalborg':{lat:57.0488,lng:9.9217},
+  'Esbjerg':{lat:55.4765,lng:8.4594},
+  'Herning':{lat:56.1394,lng:8.9733},
+  'Kolding':{lat:55.4905,lng:9.4722},
+  'Vejle':{lat:55.7093,lng:9.5358},
+  'Horsens':{lat:55.8611,lng:9.8503},
+  'Randers':{lat:56.4607,lng:10.0368},
+  'Helsingør':{lat:56.0361,lng:12.6136},
+  'Hillerød':{lat:55.9300,lng:12.3109},
+  'Næstved':{lat:55.2299,lng:11.7611},
+  'Slagelse':{lat:55.4029,lng:11.3546},
+  'Malmø':{lat:55.6050,lng:13.0038},
+  'Helsingborg':{lat:56.0465,lng:12.6945},
+  'Göteborg':{lat:57.7089,lng:11.9746},
+  'Hamburg':{lat:53.5511,lng:9.9937},
+  'Berlin':{lat:52.5200,lng:13.4050},
+  'Frederiksberg':{lat:55.6797,lng:12.5346},
+  'Glostrup':{lat:55.6670,lng:12.4007},
+  'Taastrup':{lat:55.6519,lng:12.2930},
+  'Ringsted':{lat:55.4430,lng:11.7898},
+  'Sorø':{lat:55.4317,lng:11.5576},
+};
+
+// Known road distances from Roskilde (more accurate than Haversine)
+const ROAD_DISTANCES = {
+  'Roskilde→København':35,'Roskilde→Odense':130,'Roskilde→Aarhus':200,
+  'Roskilde→Aalborg':310,'Roskilde→Esbjerg':240,'Roskilde→Herning':230,
+  'Roskilde→Kolding':180,'Roskilde→Vejle':195,'Roskilde→Horsens':210,
+  'Roskilde→Helsingør':65,'Roskilde→Hillerød':50,'Roskilde→Næstved':65,
+  'Roskilde→Slagelse':60,'Roskilde→Malmø':55,'Roskilde→Hamburg':380,
+  'Roskilde→Berlin':595,'Roskilde→Frederiksberg':30,'Roskilde→Glostrup':20,
+  'Roskilde→Taastrup':14,'Roskilde→Ringsted':40,'Roskilde→Randers':235,
+  'Roskilde→Göteborg':310,'Roskilde→Helsingborg':85,'Roskilde→Sorø':45,
+  'København→Odense':165,'København→Aarhus':305,'København→Malmø':30,
+};
+
+let kmInited=false;
+
+function haversine(c1,c2){
+  const R=6371,toR=Math.PI/180;
+  const dLat=(c2.lat-c1.lat)*toR,dLng=(c2.lng-c1.lng)*toR;
+  const a=Math.sin(dLat/2)**2+Math.cos(c1.lat*toR)*Math.cos(c2.lat*toR)*Math.sin(dLng/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+function getRouteKm(from,to){
+  // Try known road distances first (both directions)
+  const key1=`${from}→${to}`,key2=`${to}→${from}`;
+  if(ROAD_DISTANCES[key1])return ROAD_DISTANCES[key1];
+  if(ROAD_DISTANCES[key2])return ROAD_DISTANCES[key2];
+  // Haversine fallback with 1.35x road factor
+  const c1=CITY_COORDS[from],c2=CITY_COORDS[to];
+  if(!c1||!c2)return null;
+  return Math.round(haversine(c1,c2)*1.35);
+}
+
+function initKmPage(){
+  if(kmInited)return;kmInited=true;
+  const cities=Object.keys(CITY_COORDS).concat((S.customLocations||[]).map(l=>l.name));
+  const fromSel=document.getElementById('kmFrom'),toSel=document.getElementById('kmTo');
+  fromSel.innerHTML='<option value="">Vælg by...</option>';
+  toSel.innerHTML='<option value="">Vælg by...</option>';
+  cities.forEach(c=>{
+    fromSel.innerHTML+=`<option value="${c}"${c==='Roskilde'?' selected':''}>${c}</option>`;
+    toSel.innerHTML+=`<option value="${c}"${c==='København'?' selected':''}>${c}</option>`;
+  });
+  renderPresetRoutes();
+  renderCustomLocations();
+  calcKmRoute();
+}
+
+function calcKmRoute(){
+  const from=document.getElementById('kmFrom')?.value;
+  const to=document.getElementById('kmTo')?.value;
+  if(!from||!to||from===to){
+    document.getElementById('kmResultDist').textContent='—';
+    document.getElementById('kmResultRoute').textContent='Vælg to forskellige byer';
+    document.getElementById('kmResultFrad').textContent='—';
+    document.getElementById('kmResultRound').textContent='—';
+    return;
+  }
+  const km=getRouteKm(from,to);
+  if(km===null){
+    document.getElementById('kmResultDist').textContent='?';
+    document.getElementById('kmResultRoute').textContent='Ukendt rute — brug custom felter';
+    return;
+  }
+  const roundTrip=document.getElementById('kmRoundTrip')?.checked;
+  const totalKm=roundTrip?km*2:km;
+  const rate=S.driveRate??3.94;
+  const frad=Math.round(totalKm*rate);
+  document.getElementById('kmResultDist').textContent=totalKm+' km';
+  document.getElementById('kmResultRoute').textContent=from+' → '+to+(roundTrip?' (tur/retur)':'');
+  document.getElementById('kmResultFrad').textContent='+'+FMT.format(frad)+' kr.';
+  document.getElementById('kmResultRound').textContent=roundTrip?km+' km × 2':'enkelttur';
+}
+
+function lookupCustomRoute(){
+  const fromTxt=document.getElementById('kmCustomFrom').value.trim();
+  const toTxt=document.getElementById('kmCustomTo').value.trim();
+  if(!fromTxt||!toTxt)return;
+  // Check if cities exist
+  const fromKey=Object.keys(CITY_COORDS).find(c=>c.toLowerCase()===fromTxt.toLowerCase());
+  const toKey=Object.keys(CITY_COORDS).find(c=>c.toLowerCase()===toTxt.toLowerCase());
+  if(fromKey&&toKey){
+    document.getElementById('kmFrom').value=fromKey;
+    document.getElementById('kmTo').value=toKey;
+    calcKmRoute();
+  } else {
+    document.getElementById('kmResultDist').textContent='?';
+    document.getElementById('kmResultRoute').textContent='By ikke fundet — tilføj den under "Dine steder"';
+  }
+}
+
+function renderPresetRoutes(){
+  const el=document.getElementById('presetRoutes');if(!el)return;el.innerHTML='';
+  const routes=[
+    ['København',35,'Kundemøde, afhentning'],['Odense',130,'Venue, festival'],
+    ['Aarhus',200,'Tour, venue'],['Aalborg',310,'Tour, koncert'],
+    ['Kolding',180,'Tour, event'],['Helsingør',65,'Kronborg, venue'],
+    ['Malmø',55,'Sverige, event'],['Næstved',65,'Arena, venue'],
+    ['Hamburg',380,'Nordtyskland, tour'],['Berlin',595,'Tour, festival'],
+  ];
+  routes.forEach(([city,km,desc],i)=>{
+    const rate=S.driveRate??3.94;
+    const frad=Math.round(km*2*rate);
+    const row=document.createElement('div');row.className='trow cursor-pointer hover:bg-white/[.04]'+(i%2?' alt':'');
+    row.innerHTML=`<div class="flex-1"><div class="text-sm text-ink">Roskilde → ${city}</div><div class="text-[11px] text-ink3">${desc}</div></div><div class="text-right"><div class="font-mono text-xs text-cyan2">${km} km (${km*2} t/r)</div><div class="font-mono text-[10px] text-lime2 mt-0.5">+${FMT.format(frad)} kr.</div></div>`;
+    row.onclick=()=>{document.getElementById('kmFrom').value='Roskilde';document.getElementById('kmTo').value=city;calcKmRoute();};
+    el.appendChild(row);
+  });
+}
+
+function kmAddToLog(){
+  const from=document.getElementById('kmFrom')?.value;
+  const to=document.getElementById('kmTo')?.value;
+  if(!from||!to||from===to)return;
+  const km=getRouteKm(from,to);if(!km)return;
+  const roundTrip=document.getElementById('kmRoundTrip')?.checked;
+  const totalKm=roundTrip?km*2:km;
+  const trip={id:'tr'+Date.now(),purpose:`Kørsel ${from} → ${to}`,from,to,km:totalKm,date:new Date().toISOString().slice(0,10),cat:'kunde'};
+  if(!S.trips)S.trips=[];
+  S.trips.push(trip);
+  save();
+  goTab(5);
+  renderDriving();
+}
+
+function renderCustomLocations(){
+  const el=document.getElementById('customLocations');if(!el)return;
+  const locs=S.customLocations||[];
+  if(!locs.length){el.innerHTML='<div class="text-xs text-ink3 text-center py-3">Ingen egne steder tilføjet</div>';return;}
+  el.innerHTML='';
+  locs.forEach((l,i)=>{
+    const row=document.createElement('div');
+    row.className='flex items-center justify-between p-2.5 rounded-lg bg-white/[.03]';
+    row.innerHTML=`<div class="text-sm text-ink">${l.name}</div><div class="flex items-center gap-2"><span class="font-mono text-xs text-ink3">${l.lat.toFixed(2)}, ${l.lng.toFixed(2)}</span><span class="text-coral2 cursor-pointer text-xs" onclick="removeCustomLocation(${i})">✕</span></div>`;
+    el.appendChild(row);
+  });
+}
+
+function openAddLocationModal(){
+  const name=prompt('Stednavn (f.eks. "Vega, København"):');if(!name)return;
+  const lat=parseFloat(prompt('Breddegrad (f.eks. 55.67):'));if(isNaN(lat))return;
+  const lng=parseFloat(prompt('Længdegrad (f.eks. 12.56):'));if(isNaN(lng))return;
+  if(!S.customLocations)S.customLocations=[];
+  S.customLocations.push({name,lat,lng});
+  CITY_COORDS[name]={lat,lng};
+  kmInited=false;initKmPage();
+  save();
+}
+
+function removeCustomLocation(idx){
+  const name=(S.customLocations||[])[idx]?.name;
+  if(name)delete CITY_COORDS[name];
+  S.customLocations=(S.customLocations||[]).filter((_,i)=>i!==idx);
+  kmInited=false;initKmPage();
+  save();
+}
+
+// ════════════════════════════════════════════
+// PDF EKSPORT
+// ════════════════════════════════════════════
+function exportPDF(){
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'mm',format:'a4'});
+  const b=calc(S.oms,S.exp);
+  const W=210,M=20;let y=20;
+
+  // Helper
+  const addLine=(label,val,color='#333')=>{
+    doc.setFontSize(10);doc.setTextColor('#555');doc.text(label,M,y);
+    doc.setTextColor(color);doc.text(val,W-M,y,{align:'right'});
+    y+=6;
+  };
+  const addHeader=(text)=>{
+    y+=4;doc.setFontSize(12);doc.setTextColor('#1a1a2e');doc.setFont(undefined,'bold');
+    doc.text(text,M,y);doc.setFont(undefined,'normal');y+=8;
+    doc.setDrawColor('#ddd');doc.line(M,y-4,W-M,y-4);
+  };
+  const checkPage=()=>{if(y>270){doc.addPage();y=20;}};
+
+  // Title
+  doc.setFontSize(22);doc.setTextColor('#1a1a2e');doc.setFont(undefined,'bold');
+  doc.text('Økonomisk Rapport 2026',M,y);y+=8;
+  doc.setFontSize(10);doc.setTextColor('#888');doc.setFont(undefined,'normal');
+  doc.text('Enkeltmandsvirksomhed · Roskilde · Genereret '+new Date().toLocaleDateString('da-DK'),M,y);y+=4;
+  doc.text('Baseret på '+kr(S.oms)+' månedlig omsætning inkl. moms',M,y);y+=10;
+
+  // Tax breakdown
+  addHeader('Indkomstberegning');
+  addLine('Omsætning inkl. moms',kr(b.oms));
+  addLine('Moms (20%)',krs(-b.moms),'#c0392b');
+  addLine('Excl. moms',kr(b.exclM));
+  addLine('Fradrag (firma + km)','-'+FMT.format(b.totalFrad)+' kr.','#c0392b');
+  addLine('Virksomhedens overskud',kr(b.ovsk));
+  addLine('AM-bidrag (8%)',krs(-b.am),'#c0392b');
+  addLine('Personlig indkomst',kr(b.persIndk));
+  addLine('Personfradrag','+'+FMT.format(Math.round(b.persFrad))+' kr.','#27ae60');
+  addLine('Beskæftigelsesfradrag','+'+FMT.format(b.beskFrad)+' kr.','#27ae60');
+  addLine('Bundskat (12,01%)',krs(-b.bundSkat),'#c0392b');
+  addLine('Komm.+kirkeskat (26,04%)',krs(-b.kommSkat),'#c0392b');
+  addLine('Samlet skat',krs(-b.skat),'#c0392b');
+  y+=2;doc.setFont(undefined,'bold');
+  addLine('NETTO TIL RÅDIGHED',kr(b.netto),'#2980b9');
+  doc.setFont(undefined,'normal');
+
+  // VAT
+  checkPage();addHeader('Momsopgørelse');
+  const firmaUdgTotal=FIRMA_OMK+(S.firmaExps||[]).reduce((s,e)=>s+(e.amount||0),0);
+  const indgMoms=Math.round(firmaUdgTotal*0.2);
+  const nettomoms=Math.round(b.moms-indgMoms);
+  addLine('Udgående moms (salg)',kr(b.moms));
+  addLine('Indgående moms (køb)',kr(indgMoms),'#27ae60');
+  addLine('Nettomoms pr. måned',kr(nettomoms),'#c0392b');
+  addLine('Kvartalsvis betaling',kr(nettomoms*3),'#c0392b');
+
+  // Expenses
+  checkPage();addHeader('Faste udgifter');
+  S.exp.forEach(e=>{addLine(e.ico+' '+e.name,kr(e.val));checkPage();});
+  y+=2;doc.setFont(undefined,'bold');
+  addLine('TOTAL UDGIFTER',kr(b.tot),'#c0392b');
+  doc.setFont(undefined,'normal');
+
+  // Rådighedsbeløb
+  checkPage();addHeader('Rådighedsbeløb');
+  addLine('Netto efter skat',kr(b.netto),'#2980b9');
+  addLine('Faste udgifter',kr(b.tot),'#c0392b');
+  y+=2;doc.setFont(undefined,'bold');
+  addLine('RÅDIGHEDSBELØB PR. MÅNED',kr(b.raad),b.raad>0?'#27ae60':'#c0392b');
+  addLine('RÅDIGHEDSBELØB PR. ÅR',kr(b.raad*12),b.raad>0?'#27ae60':'#c0392b');
+  doc.setFont(undefined,'normal');
+
+  // Driving log
+  if(S.trips&&S.trips.length){
+    checkPage();addHeader('Kørselslog');
+    const rate=S.driveRate??3.94;
+    S.trips.forEach(t=>{
+      const frad=Math.round((t.km||0)*rate);
+      addLine((t.purpose||'Kørsel')+' ('+t.date+')',t.km+' km → +'+FMT.format(frad)+' kr.','#555');
+      checkPage();
+    });
+    const totalKm=S.trips.reduce((s,t)=>s+(t.km||0),0);
+    y+=2;doc.setFont(undefined,'bold');
+    addLine('TOTAL KM',totalKm.toLocaleString('da-DK')+' km');
+    addLine('TOTAL FRADRAG',kr(Math.round(totalKm*rate)),'#27ae60');
+    doc.setFont(undefined,'normal');
+  }
+
+  // Firma expenses
+  if(S.firmaExps&&S.firmaExps.length){
+    checkPage();addHeader('Firmaudgifter');
+    S.firmaExps.forEach(e=>{
+      const cat=FIRMA_CATS.find(c=>c.id===e.cat);
+      addLine((e.desc||cat?.lbl||'Udgift'),kr(e.amount||0));checkPage();
+    });
+    y+=2;doc.setFont(undefined,'bold');
+    addLine('TOTAL FRADRAG',kr(calcFirmaFradrag()),'#27ae60');
+    doc.setFont(undefined,'normal');
+  }
+
+  // Footer
+  checkPage();y+=10;
+  doc.setFontSize(8);doc.setTextColor('#aaa');
+  doc.text('Genereret af Økonomi 2026 · '+new Date().toLocaleString('da-DK'),M,y);
+  doc.text('Skatteparametre verificeret via SKAT.dk — dette er ikke en officiel skatteberegning',M,y+4);
+
+  doc.save('økonomi-rapport-2026.pdf');
+}
+
+// ════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════
+load();
+document.getElementById('omsInp').value=S.oms;
+if(S.rejseOn){
+  const sec=document.getElementById('rejseSection'),tog=document.getElementById('rejseToggle'),knob=document.getElementById('rejseToggleKnob');
+  if(sec)sec.style.display='flex';
+  if(tog){tog.style.background='#38bdf8';tog.style.borderColor='rgba(56,189,248,.5)';}
+  if(knob){knob.style.transform='translateX(20px)';knob.style.background='#fff';}
+  const dEl=document.getElementById('rejseDage');if(dEl)dEl.value=S.rejseDage;
+  const sEl=document.getElementById('rejseDiaetSats');if(sEl)sEl.value=S.rejseDiaetSats;
+  const tEl=document.getElementById('rejseTransport');if(tEl)tEl.value=S.rejseTransport||'';
+  const lEl=document.getElementById('rejseLogi');if(lEl)lEl.value=S.rejseLogi||'';
+  setLogiMode(S.rejseLogiMode||0);
+  updateRejse();
+}
+renderDash();
+
+// Splash
+setTimeout(()=>{document.getElementById('splash').classList.add('out');setTimeout(()=>document.getElementById('splash')?.remove(),700);},1000);
+
+// Keyboard shortcut: Escape to close modals
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){closeTripModal();closeGoalModal();closeFirmaModal();}
+});
+</script>
+</body>
+</html>
