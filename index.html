@@ -2950,26 +2950,6 @@ countUp = function(id, target, ms, fmt) {
   return origCountUp(id, target, ms, fmt);
 };
 
-// ── Hover sound effect (subtle) ──
-// Using Web Audio API for tiny click sounds on nav
-let audioCtx;
-function playTick() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
-  osc.frequency.value = 800 + Math.random() * 400;
-  osc.type = 'sine';
-  gain.gain.value = 0.015;
-  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
-  osc.start();
-  osc.stop(audioCtx.currentTime + 0.08);
-}
-document.querySelectorAll('.nav-item').forEach(item => {
-  item.addEventListener('mouseenter', playTick);
-});
-
 // ── Daily greeting based on time ──
 (function updateGreeting() {
   const h = new Date().getHours();
