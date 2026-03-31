@@ -1560,6 +1560,19 @@ tailwind.config = {
       <input class="field-inp" id="tDate" type="date">
     </div>
   </div>
+  <!-- Tur/retur toggle -->
+  <div class="flex items-center justify-between mb-4 p-3 rounded-xl bg-white/[.04] border border-white/[.07]">
+    <div class="flex items-center gap-2.5">
+      <span class="text-lg">🔄</span>
+      <div>
+        <div class="text-sm font-semibold text-ink">Tur/retur</div>
+        <div class="text-[11px] text-ink3">Fordobler km automatisk</div>
+      </div>
+    </div>
+    <div id="turReturToggle" onclick="toggleTurRetur()" class="relative w-[44px] h-[24px] rounded-full cursor-pointer transition-all border border-white/10" style="background:rgba(255,255,255,.08);">
+      <div id="turReturKnob" class="absolute top-[2px] left-[2px] w-[18px] h-[18px] rounded-full transition-all" style="background:#475569;"></div>
+    </div>
+  </div>
   <div class="text-[11px] font-semibold text-ink3 uppercase tracking-wider mb-2">Kategori</div>
   <div class="flex gap-2 flex-wrap mb-4" id="catGrid"></div>
   <button class="w-full py-3.5 rounded-xl bg-cyan text-bg font-display text-base font-extrabold cursor-pointer border-none outline-none transition hover:brightness-110" style="box-shadow:0 4px 20px rgba(34,211,238,.25)" onclick="saveTrip()">Gem kørsel</button>
@@ -2055,12 +2068,19 @@ function renderChart(){
 // DRIVING
 // ════════════════════════════════════════════
 const TRIP_CATS=[
-  {id:'kunde',ico:'🤝',lbl:'Kundemøde'},{id:'levering',ico:'📦',lbl:'Levering'},
+  {id:'arbejde',ico:'💡',lbl:'Arbejde'},{id:'kunde',ico:'🤝',lbl:'Kundemøde'},{id:'levering',ico:'📦',lbl:'Levering'},
   {id:'bank',ico:'🏦',lbl:'Bank/revisor'},{id:'indkob',ico:'🛒',lbl:'Erhvervsindkøb'},
   {id:'kursus',ico:'🎓',lbl:'Kursus'},{id:'kontor',ico:'🏢',lbl:'Kontor'},
   {id:'lager',ico:'🏭',lbl:'Lager'},{id:'andet',ico:'🚗',lbl:'Andet'},
 ];
-let editTripId=null,selTripCat='kunde';
+let editTripId=null,selTripCat='arbejde',turReturOn=false;
+
+function toggleTurRetur(){
+  turReturOn=!turReturOn;
+  const tog=document.getElementById('turReturToggle'),knob=document.getElementById('turReturKnob');
+  if(turReturOn){tog.style.background='#38bdf8';tog.style.borderColor='rgba(56,189,248,.5)';knob.style.transform='translateX(20px)';knob.style.background='#fff';}
+  else{tog.style.background='rgba(255,255,255,.08)';tog.style.borderColor='rgba(255,255,255,.1)';knob.style.transform='translateX(0)';knob.style.background='#475569';}
+}
 
 function onKmChange(){
   S.driveKm=parseFloat(document.getElementById('kmInp').value)||0;
@@ -2129,10 +2149,10 @@ function buildCatGrid(){
     grid.appendChild(btn);
   });
 }
-function openTripModal(){editTripId=null;selTripCat='kunde';document.getElementById('tripModalTitle').textContent='Ny kørsel';document.getElementById('tPurpose').value='';document.getElementById('tFrom').value='';document.getElementById('tTo').value='';document.getElementById('tKm').value='';document.getElementById('tDate').value=new Date().toISOString().slice(0,10);buildCatGrid();document.getElementById('tripOverlay').classList.add('open');document.getElementById('tripModal').classList.add('open');}
-function editTrip(id){const trip=(S.trips??[]).find(t=>t.id===id);if(!trip)return;editTripId=id;selTripCat=trip.cat??'kunde';document.getElementById('tripModalTitle').textContent='Rediger kørsel';document.getElementById('tPurpose').value=trip.purpose??'';document.getElementById('tFrom').value=trip.from??'';document.getElementById('tTo').value=trip.to??'';document.getElementById('tKm').value=trip.km??'';document.getElementById('tDate').value=trip.date??new Date().toISOString().slice(0,10);buildCatGrid();document.getElementById('tripOverlay').classList.add('open');document.getElementById('tripModal').classList.add('open');}
+function openTripModal(){editTripId=null;selTripCat='arbejde';turReturOn=false;document.getElementById('turReturToggle').style.background='rgba(255,255,255,.08)';document.getElementById('turReturToggle').style.borderColor='rgba(255,255,255,.1)';document.getElementById('turReturKnob').style.transform='translateX(0)';document.getElementById('turReturKnob').style.background='#475569';document.getElementById('tripModalTitle').textContent='Ny kørsel';document.getElementById('tPurpose').value='';document.getElementById('tFrom').value='';document.getElementById('tTo').value='';document.getElementById('tKm').value='';document.getElementById('tDate').value=new Date().toISOString().slice(0,10);buildCatGrid();document.getElementById('tripOverlay').classList.add('open');document.getElementById('tripModal').classList.add('open');}
+function editTrip(id){const trip=(S.trips??[]).find(t=>t.id===id);if(!trip)return;editTripId=id;selTripCat=trip.cat??'arbejde';turReturOn=false;document.getElementById('turReturToggle').style.background='rgba(255,255,255,.08)';document.getElementById('turReturToggle').style.borderColor='rgba(255,255,255,.1)';document.getElementById('turReturKnob').style.transform='translateX(0)';document.getElementById('turReturKnob').style.background='#475569';document.getElementById('tripModalTitle').textContent='Rediger kørsel';document.getElementById('tPurpose').value=trip.purpose??'';document.getElementById('tFrom').value=trip.from??'';document.getElementById('tTo').value=trip.to??'';document.getElementById('tKm').value=trip.km??'';document.getElementById('tDate').value=trip.date??new Date().toISOString().slice(0,10);buildCatGrid();document.getElementById('tripOverlay').classList.add('open');document.getElementById('tripModal').classList.add('open');}
 function closeTripModal(){document.getElementById('tripOverlay').classList.remove('open');document.getElementById('tripModal').classList.remove('open');}
-function saveTrip(){const km=parseFloat(document.getElementById('tKm').value);if(!km||km<=0){document.getElementById('tKm').focus();return;}const trip={id:editTripId??'tr'+Date.now(),purpose:document.getElementById('tPurpose').value.trim(),from:document.getElementById('tFrom').value.trim(),to:document.getElementById('tTo').value.trim(),km,date:document.getElementById('tDate').value,cat:selTripCat};if(!S.trips)S.trips=[];if(editTripId){S.trips=S.trips.map(t=>t.id===editTripId?trip:t);}else{S.trips.push(trip);}closeTripModal();renderDriving();save();}
+function saveTrip(){let km=parseFloat(document.getElementById('tKm').value);if(!km||km<=0){document.getElementById('tKm').focus();return;}if(turReturOn)km=km*2;const trip={id:editTripId??'tr'+Date.now(),purpose:document.getElementById('tPurpose').value.trim(),from:document.getElementById('tFrom').value.trim(),to:document.getElementById('tTo').value.trim(),km,date:document.getElementById('tDate').value,cat:selTripCat};if(!S.trips)S.trips=[];if(editTripId){S.trips=S.trips.map(t=>t.id===editTripId?trip:t);}else{S.trips.push(trip);}closeTripModal();renderDriving();save();}
 function deleteTrip(id){S.trips=(S.trips??[]).filter(t=>t.id!==id);renderDriving();save();}
 
 // ════════════════════════════════════════════
@@ -2581,7 +2601,7 @@ function kmAddToLog(){
   const km=getRouteKm(from,to);if(!km)return;
   const roundTrip=document.getElementById('kmRoundTrip')?.checked;
   const totalKm=roundTrip?km*2:km;
-  const trip={id:'tr'+Date.now(),purpose:`Kørsel ${from} → ${to}`,from,to,km:totalKm,date:new Date().toISOString().slice(0,10),cat:'kunde'};
+  const trip={id:'tr'+Date.now(),purpose:`Kørsel ${from} → ${to}`,from,to,km:totalKm,date:new Date().toISOString().slice(0,10),cat:'arbejde'};
   if(!S.trips)S.trips=[];
   S.trips.push(trip);
   save();
