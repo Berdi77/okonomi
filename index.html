@@ -1820,10 +1820,20 @@ function getRejseBreakdown(){
 
 function calc(oms, exps) {
   const moms=oms*0.2, exclM=oms*0.8;
-  const kmPrMd=S.driveKm??1250, kmRate=S.driveRate??3.94, kmPrAar=kmPrMd*12;
+  const kmRate=S.driveRate??3.94;
+  // Use actual logbook km if trips exist, otherwise use config estimate
+  const loggedKm=(S.trips??[]).reduce((s,t)=>s+(t.km||0),0);
   let kmFradrag;
-  if(kmPrAar<=20000){kmFradrag=Math.round(kmPrMd*kmRate);}
-  else{kmFradrag=Math.round((20000*kmRate+(kmPrAar-20000)*KM_LAV_SATS)/12);}
+  if(loggedKm>0){
+    // Use actual logged km as annual total
+    if(loggedKm<=20000){kmFradrag=Math.round(loggedKm*kmRate/12);}
+    else{kmFradrag=Math.round((20000*kmRate+(loggedKm-20000)*KM_LAV_SATS)/12);}
+  } else {
+    // Fallback to config estimate
+    const kmPrMd=S.driveKm??1250, kmPrAar=kmPrMd*12;
+    if(kmPrAar<=20000){kmFradrag=Math.round(kmPrMd*kmRate);}
+    else{kmFradrag=Math.round((20000*kmRate+(kmPrAar-20000)*KM_LAV_SATS)/12);}
+  }
   const FIRMA_CAT_PCT={software:1,telefon:1,markeds:1,repr:.25,kursus:1,revisor:1,forsikring:1,rejse:1,varer:1,andet:1};
   const firmaUdgif=(S.firmaExps??[]).reduce((sum,e)=>sum+Math.round((e.amount||0)*(FIRMA_CAT_PCT[e.cat]??1)),0);
   const rejseFrad=S.rejseOn?calcRejseFradrag():0;
@@ -1844,7 +1854,7 @@ function calc(oms, exps) {
   const netto=Math.round(exclM-realUdgifter-am-skat);
   const tot=exps.reduce((s,e)=>s+e.val,0);
   const raad=netto-tot;
-  return{oms,exclM,moms,ovsk,am,persIndk,beskFrad,persFrad,skattepligtig,bundSkat,kommSkat,skat,netto,tot,raad,kmFradrag,totalFrad};
+  return{oms,exclM,moms,ovsk,am,persIndk,beskFrad,persFrad,skattepligtig,bundSkat,kommSkat,skat,netto,tot,raad,kmFradrag,totalFrad,loggedKm};
 }
 
 const FMT=new Intl.NumberFormat('da-DK',{maximumFractionDigits:0});
@@ -1921,7 +1931,10 @@ function renderDash(){
   if(fradDesc){
     const firmaUdg=(S.firmaExps??[]).reduce((sum,e)=>sum+Math.round((e.amount||0)*({software:1,telefon:1,markeds:1,repr:.25,kursus:1,revisor:1,forsikring:1,rejse:1,varer:1,andet:1}[e.cat]??1)),0);
     const parts=['2.000'];
-    if(b.kmFradrag)parts.push(FMT.format(b.kmFradrag)+' km');
+    if(b.kmFradrag){
+      const kmLabel=b.loggedKm>0?FMT.format(b.kmFradrag)+' km (logbog: '+FMT.format(b.loggedKm)+' km)':FMT.format(b.kmFradrag)+' km (estimat)';
+      parts.push(kmLabel);
+    }
     if(firmaUdg)parts.push(FMT.format(firmaUdg)+' firma');
     fradDesc.textContent=parts.join(' + ')+' kr./md.';
   }
