@@ -1007,9 +1007,39 @@ tailwind.config = {
           </div>
         </div>
       </div>
-    </section>
 
-    <!-- ══════════════════════ PANE 5: KØRSEL ══════════════════════ -->
+      <!-- Rute-API Integration -->
+      <div class="glass overflow-hidden mt-5">
+        <div class="px-5 py-3 bg-white/[.03] border-b border-white/[.04] text-[11px] font-bold text-ink3 uppercase tracking-wider flex items-center gap-2">
+          <span>🌍</span> Ruteberegning (OpenRouteService)
+          <span class="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full" id="orsStatus" style="background:rgba(251,113,133,.1);color:#fda4af;border:1px solid rgba(251,113,133,.2)">Ikke forbundet</span>
+        </div>
+        <div class="p-5">
+          <p class="text-sm text-ink2 mb-3">Tilslut OpenRouteService for at beregne præcise køreafstande med rigtige vejruter. Helt gratis — ingen kreditkort nødvendigt.</p>
+          <div class="text-[11px] font-semibold text-ink3 uppercase tracking-wider mb-2">API-nøgle</div>
+          <div class="flex gap-2 mb-3">
+            <input class="field-inp flex-1 !font-mono !text-sm" id="orsKeyInp" type="password" placeholder="5b3ce3597851110001cf..." autocomplete="off">
+            <button onclick="saveOrsKey()" class="px-5 py-2.5 rounded-xl bg-cyan text-bg text-sm font-bold cursor-pointer border-none hover:brightness-110 transition" style="box-shadow:0 2px 12px rgba(34,211,238,.2)">Gem</button>
+            <button onclick="toggleOrsKeyVis()" class="px-3 py-2.5 rounded-xl bg-white/[.06] border border-white/[.08] text-ink3 text-sm cursor-pointer hover:bg-white/[.1] transition">👁</button>
+          </div>
+          <div class="text-[11px] text-ink3 mb-4" id="orsMsg"></div>
+          <div class="rounded-xl p-4 bg-white/[.03] border border-white/[.06]">
+            <div class="text-xs font-bold text-ink2 mb-2">📋 Sådan får du en gratis API-nøgle (2 min):</div>
+            <ol class="text-xs text-ink3 space-y-1.5 list-decimal list-inside">
+              <li>Gå til <span class="text-cyan2 font-semibold cursor-pointer" onclick="window.open('https://openrouteservice.org/dev/#/signup','_blank')">openrouteservice.org/dev/#/signup</span></li>
+              <li>Opret en gratis konto (email + password)</li>
+              <li>Under "Tokens" — klik <span class="text-ink2 font-semibold">Request a token</span></li>
+              <li>Giv den et navn (f.eks. "Økonomi") og klik Create</li>
+              <li>Kopiér nøglen og indsæt den herover</li>
+            </ol>
+            <div class="flex items-center gap-2 mt-3 pt-3 border-t border-white/[.06]">
+              <span class="text-lg">✅</span>
+              <span class="text-xs text-lime2 font-semibold">Helt gratis · 2.000 forespørgsler/dag · Ingen kreditkort</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
     <section class="page-section hidden" id="p5">
       <div class="flex items-baseline justify-between mb-6">
         <div>
@@ -1553,13 +1583,19 @@ tailwind.config = {
   <div class="grid grid-cols-2 gap-3 mb-3">
     <div>
       <div class="text-[11px] font-semibold text-ink3 uppercase tracking-wider mb-2">Kilometer</div>
-      <input class="field-inp" id="tKm" type="number" inputmode="decimal" placeholder="65">
+      <div class="flex gap-2">
+        <input class="field-inp flex-1" id="tKm" type="number" inputmode="decimal" placeholder="65">
+        <button onclick="calcTripKm()" id="calcKmBtn" class="px-3 py-2 rounded-xl text-sm font-bold cursor-pointer border-none transition flex items-center gap-1.5 flex-shrink-0" style="background:rgba(163,230,53,.1);border:1px solid rgba(163,230,53,.25);color:#bef264;" title="Beregn km via ruteberegning">
+          <span>📍</span><span class="text-[11px]" id="calcKmLabel">Beregn</span>
+        </button>
+      </div>
     </div>
     <div>
       <div class="text-[11px] font-semibold text-ink3 uppercase tracking-wider mb-2">Dato</div>
       <input class="field-inp" id="tDate" type="date">
     </div>
   </div>
+  <div class="text-[11px] text-ink3 mb-3 hidden" id="calcKmResult"></div>
   <!-- Tur/retur toggle -->
   <div class="flex items-center justify-between mb-4 p-3 rounded-xl bg-white/[.04] border border-white/[.07]">
     <div class="flex items-center gap-2.5">
@@ -2752,6 +2788,211 @@ function exportPDF(){
 }
 
 // ════════════════════════════════════════════
+// OPENROUTESERVICE INTEGRATION
+// ════════════════════════════════════════════
+let ORS_KEY = localStorage.getItem('okonomi_ors_key') || '';
+
+function saveOrsKey() {
+  const key = document.getElementById('orsKeyInp').value.trim();
+  if (!key) { document.getElementById('orsMsg').textContent = '❌ Indtast en nøgle'; return; }
+  ORS_KEY = key;
+  localStorage.setItem('okonomi_ors_key', key);
+  document.getElementById('orsMsg').textContent = '⏳ Tester forbindelse...';
+  // Test the key with a simple geocode request
+  fetch('https://api.openrouteservice.org/geocode/search?api_key=' + encodeURIComponent(key) + '&text=Roskilde,Denmark&size=1')
+    .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(d => {
+      if (d.features && d.features.length) {
+        document.getElementById('orsMsg').innerHTML = '<span style="color:#bef264">✅ Forbundet! Ruteberegning er klar.</span>';
+        updateOrsStatus(true);
+      } else {
+        document.getElementById('orsMsg').textContent = '⚠️ Nøglen virker, men ingen resultater';
+        updateOrsStatus(false);
+      }
+    })
+    .catch(e => {
+      document.getElementById('orsMsg').textContent = '❌ Ugyldig nøgle eller forbindelsesfejl (' + e.message + ')';
+      updateOrsStatus(false);
+    });
+}
+
+function updateOrsStatus(connected) {
+  const el = document.getElementById('orsStatus');
+  if (!el) return;
+  if (connected) {
+    el.textContent = 'Forbundet';
+    el.style.background = 'rgba(163,230,53,.1)';
+    el.style.color = '#bef264';
+    el.style.borderColor = 'rgba(163,230,53,.2)';
+  } else {
+    el.textContent = 'Ikke forbundet';
+    el.style.background = 'rgba(251,113,133,.1)';
+    el.style.color = '#fda4af';
+    el.style.borderColor = 'rgba(251,113,133,.2)';
+  }
+}
+
+function toggleOrsKeyVis() {
+  const inp = document.getElementById('orsKeyInp');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+// Geocode a place name to coordinates
+async function orsGeocode(query) {
+  if (!ORS_KEY) return null;
+  // Add Denmark bias for better results
+  const q = query.match(/,/) ? query : query + ', Danmark';
+  const url = 'https://api.openrouteservice.org/geocode/search?api_key=' + encodeURIComponent(ORS_KEY)
+    + '&text=' + encodeURIComponent(q)
+    + '&size=1&boundary.country=DK,SE,DE,NO';
+  try {
+    const r = await fetch(url);
+    if (!r.ok) return null;
+    const d = await r.json();
+    if (d.features && d.features.length) {
+      const c = d.features[0].geometry.coordinates; // [lng, lat]
+      return { lng: c[0], lat: c[1], name: d.features[0].properties.label };
+    }
+  } catch (e) { console.error('ORS geocode error:', e); }
+  return null;
+}
+
+// Get driving route distance between two coordinate pairs
+async function orsRoute(fromCoord, toCoord) {
+  if (!ORS_KEY) return null;
+  const url = 'https://api.openrouteservice.org/v2/directions/driving-car?api_key=' + encodeURIComponent(ORS_KEY)
+    + '&start=' + fromCoord.lng + ',' + fromCoord.lat
+    + '&end=' + toCoord.lng + ',' + toCoord.lat;
+  try {
+    const r = await fetch(url);
+    if (!r.ok) return null;
+    const d = await r.json();
+    if (d.features && d.features.length) {
+      const seg = d.features[0].properties.segments[0];
+      return {
+        km: Math.round(seg.distance / 1000 * 10) / 10,  // meters → km, 1 decimal
+        duration: Math.round(seg.duration / 60),          // seconds → minutes
+      };
+    }
+  } catch (e) { console.error('ORS route error:', e); }
+  return null;
+}
+
+// Full geocode + route: place names → driving km
+async function orsCalcDistance(fromText, toText) {
+  const from = await orsGeocode(fromText);
+  if (!from) return { error: 'Kunne ikke finde "' + fromText + '"' };
+  const to = await orsGeocode(toText);
+  if (!to) return { error: 'Kunne ikke finde "' + toText + '"' };
+  const route = await orsRoute(from, to);
+  if (!route) return { error: 'Kunne ikke beregne rute' };
+  return { km: route.km, duration: route.duration, fromLabel: from.name, toLabel: to.name };
+}
+
+// ── Trip modal: Beregn km button ──
+async function calcTripKm() {
+  const from = document.getElementById('tFrom').value.trim();
+  const to = document.getElementById('tTo').value.trim();
+  const resultEl = document.getElementById('calcKmResult');
+  const labelEl = document.getElementById('calcKmLabel');
+
+  if (!from || !to) {
+    resultEl.textContent = '⚠️ Udfyld både Fra og Til først';
+    resultEl.classList.remove('hidden');
+    return;
+  }
+
+  if (!ORS_KEY) {
+    resultEl.innerHTML = '⚠️ Tilføj en API-nøgle under <span class="text-cyan2 cursor-pointer font-semibold" onclick="goTab(4)">Parametre → Ruteberegning</span>';
+    resultEl.classList.remove('hidden');
+    // Fall back to built-in calculation
+    const builtIn = getRouteKm(from, to);
+    if (builtIn) {
+      document.getElementById('tKm').value = builtIn;
+      resultEl.innerHTML += '<br>📐 Bruger estimat: ' + builtIn + ' km (fugleflugt × 1,35)';
+    }
+    return;
+  }
+
+  // Show loading state
+  labelEl.textContent = '...';
+  resultEl.textContent = '⏳ Beregner rute...';
+  resultEl.classList.remove('hidden');
+
+  const result = await orsCalcDistance(from, to);
+
+  if (result.error) {
+    labelEl.textContent = 'Beregn';
+    resultEl.textContent = '❌ ' + result.error;
+    // Try built-in fallback
+    const builtIn = getRouteKm(from, to);
+    if (builtIn) {
+      document.getElementById('tKm').value = builtIn;
+      resultEl.textContent += ' — bruger estimat: ' + builtIn + ' km';
+    }
+    return;
+  }
+
+  // Success!
+  document.getElementById('tKm').value = result.km;
+  labelEl.textContent = 'Beregn';
+  const hrs = Math.floor(result.duration / 60);
+  const mins = result.duration % 60;
+  const timeStr = hrs > 0 ? hrs + 't ' + mins + 'min' : mins + ' min';
+  resultEl.innerHTML = '✅ <span class="text-lime2 font-semibold">' + result.km + ' km</span> via vejrute · <span class="text-ink2">' + timeStr + ' kørsel</span>'
+    + '<br><span class="text-ink3 text-[10px]">' + result.fromLabel + ' → ' + result.toLabel + '</span>';
+}
+
+// ── Km-beregner page: enhanced with ORS ──
+const origCalcKmRoute = calcKmRoute;
+calcKmRoute = function() {
+  // Always run the built-in calc first
+  origCalcKmRoute();
+
+  // If ORS key available + custom lookup, also try ORS
+  const from = document.getElementById('kmFrom')?.value;
+  const to = document.getElementById('kmTo')?.value;
+  if (!from || !to || from === to || !ORS_KEY) return;
+
+  // Check if this is a known route - if so, no need for API
+  const key1 = from + '→' + to, key2 = to + '→' + from;
+  if (ROAD_DISTANCES[key1] || ROAD_DISTANCES[key2]) return;
+
+  // Unknown route - try ORS
+  const distEl = document.getElementById('kmResultDist');
+  const routeEl = document.getElementById('kmResultRoute');
+  if (distEl.textContent === '?') {
+    routeEl.textContent = '⏳ Beregner via OpenRouteService...';
+    orsCalcDistance(from, to).then(result => {
+      if (result.error) {
+        routeEl.textContent = '❌ ' + result.error;
+        return;
+      }
+      const roundTrip = document.getElementById('kmRoundTrip')?.checked;
+      const totalKm = roundTrip ? result.km * 2 : result.km;
+      const rate = S.driveRate ?? 3.94;
+      const frad = Math.round(totalKm * rate);
+      distEl.textContent = totalKm + ' km';
+      routeEl.textContent = from + ' → ' + to + (roundTrip ? ' (tur/retur)' : '') + ' · via vejrute';
+      document.getElementById('kmResultFrad').textContent = '+' + FMT.format(frad) + ' kr.';
+      document.getElementById('kmResultRound').textContent = roundTrip ? result.km + ' km × 2' : 'enkelttur';
+    });
+  }
+};
+
+// ── Init ORS on load ──
+function initOrs() {
+  const inp = document.getElementById('orsKeyInp');
+  if (inp && ORS_KEY) {
+    inp.value = ORS_KEY;
+    // Quick silent test
+    fetch('https://api.openrouteservice.org/geocode/search?api_key=' + encodeURIComponent(ORS_KEY) + '&text=Roskilde&size=1')
+      .then(r => { if (r.ok) updateOrsStatus(true); else updateOrsStatus(false); })
+      .catch(() => updateOrsStatus(false));
+  }
+}
+
+// ════════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════════
 load();
@@ -2769,6 +3010,7 @@ if(S.rejseOn){
   updateRejse();
 }
 renderDash();
+initOrs();
 
 // Splash
 setTimeout(()=>{document.getElementById('splash').classList.add('out');setTimeout(()=>document.getElementById('splash')?.remove(),700);},1000);
