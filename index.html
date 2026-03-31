@@ -270,6 +270,35 @@ tailwind.config = {
   .gc-btn.primary { background: rgba(34,211,238,.1); border-color: rgba(34,211,238,.25); color: #67e8f9; }
   .gc-btn.primary:hover { background: rgba(34,211,238,.18); }
 
+  /* Address dropdown */
+  .addr-dropdown {
+    position: absolute; top: 100%; left: 0; right: 0; z-index: 220;
+    margin-top: 4px; max-height: 200px; overflow-y: auto;
+    background: linear-gradient(145deg, #0f1628, #141e32);
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 12px;
+    box-shadow: 0 12px 40px rgba(0,0,0,.5);
+  }
+  .addr-dropdown.hidden { display: none; }
+  .addr-dd-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px; cursor: pointer;
+    border-bottom: 1px solid rgba(255,255,255,.04);
+    transition: background .12s;
+  }
+  .addr-dd-item:last-child { border-bottom: none; }
+  .addr-dd-item:hover { background: rgba(34,211,238,.08); }
+  .addr-dd-item .addr-ico { font-size: 16px; width: 22px; text-align: center; flex-shrink: 0; }
+  .addr-dd-item .addr-name { font-size: 13px; font-weight: 600; color: #f0f6ff; }
+  .addr-dd-item .addr-sub { font-size: 11px; color: #475569; }
+  .theme-light .addr-dropdown {
+    background: linear-gradient(145deg, rgba(255,255,255,.95), rgba(245,248,255,.95)) !important;
+    border-color: rgba(0,0,0,.1) !important;
+  }
+  .theme-light .addr-dd-item:hover { background: rgba(34,211,238,.06); }
+  .theme-light .addr-dd-item .addr-name { color: #1a1a2e; }
+  .theme-light .addr-dd-item .addr-sub { color: #94a3b8; }
+
   /* ══════════════════════════════════════════
      VISUAL GIMMICKS & EFFECTS
      ══════════════════════════════════════════ */
@@ -1140,9 +1169,22 @@ tailwind.config = {
           </div>
         </div>
       </div>
-    </section>
 
-    <!-- ══════════════════════ PANE 6: FIRMAUDGIFTER ══════════════════════ -->
+      <!-- Adressebog -->
+      <div class="glass overflow-hidden mt-5">
+        <div class="px-5 py-3 bg-white/[.03] border-b border-white/[.04] flex items-center justify-between">
+          <span class="text-[11px] font-bold text-ink3 uppercase tracking-wider flex items-center gap-2"><span>📒</span> Adressebog</span>
+          <button onclick="openAddrModal()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-cyan text-bg text-[11px] font-bold cursor-pointer hover:brightness-110 transition">
+            <span>＋</span> Tilføj
+          </button>
+        </div>
+        <div id="addrList" class="divide-y divide-white/[.04]"></div>
+        <div id="addrEmpty" class="p-6 text-center text-ink3 text-sm">
+          <div class="text-2xl mb-2">📒</div>
+          Ingen gemte adresser endnu.<br>Tilføj dine faste steder for hurtig udfyldning.
+        </div>
+      </div>
+    </section>
     <section class="page-section hidden" id="p6">
       <div class="flex items-baseline justify-between mb-6">
         <div>
@@ -1571,13 +1613,15 @@ tailwind.config = {
   <div class="text-[11px] font-semibold text-ink3 uppercase tracking-wider mb-2">Formål</div>
   <input class="field-inp mb-3" id="tPurpose" type="text" placeholder="f.eks. Kundemøde i København">
   <div class="grid grid-cols-2 gap-3 mb-3">
-    <div>
+    <div class="relative">
       <div class="text-[11px] font-semibold text-ink3 uppercase tracking-wider mb-2">Fra</div>
-      <input class="field-inp" id="tFrom" type="text" placeholder="f.eks. Roskilde">
+      <input class="field-inp" id="tFrom" type="text" placeholder="f.eks. Roskilde" autocomplete="off" onfocus="showAddrDropdown('tFrom')" oninput="filterAddrDropdown('tFrom')">
+      <div class="addr-dropdown hidden" id="tFromDropdown"></div>
     </div>
-    <div>
+    <div class="relative">
       <div class="text-[11px] font-semibold text-ink3 uppercase tracking-wider mb-2">Til</div>
-      <input class="field-inp" id="tTo" type="text" placeholder="f.eks. København">
+      <input class="field-inp" id="tTo" type="text" placeholder="f.eks. København" autocomplete="off" onfocus="showAddrDropdown('tTo')" oninput="filterAddrDropdown('tTo')">
+      <div class="addr-dropdown hidden" id="tToDropdown"></div>
     </div>
   </div>
   <div class="grid grid-cols-2 gap-3 mb-3">
@@ -1657,6 +1701,20 @@ tailwind.config = {
   <button class="w-full py-3.5 rounded-xl bg-cyan text-bg font-display text-base font-extrabold cursor-pointer border-none outline-none transition hover:brightness-110 mt-4" style="box-shadow:0 4px 20px rgba(34,211,238,.25)" id="firmaSaveBtn" onclick="saveFirmaExp()">Gem udgift</button>
 </div>
 
+<!-- ADDRESS MODAL -->
+<div class="modal-overlay" id="addrOverlay" onclick="closeAddrModal()"></div>
+<div class="modal-panel" id="addrModal" onclick="event.stopPropagation()">
+  <div class="font-display text-xl font-extrabold mb-1" id="addrModalTitle">Ny adresse</div>
+  <div class="text-sm text-ink3 mb-5">Gem en adresse til hurtig udfyldning af kørsler</div>
+  <div class="text-[11px] font-semibold text-ink3 uppercase tracking-wider mb-2">Navn / label</div>
+  <input class="field-inp mb-3" id="addrName" type="text" placeholder="f.eks. VEGA, Musikkens Hus, Hjem...">
+  <div class="text-[11px] font-semibold text-ink3 uppercase tracking-wider mb-2">Adresse</div>
+  <input class="field-inp mb-3" id="addrAddress" type="text" placeholder="f.eks. Enghavevej 40, 1674 København V">
+  <div class="text-[11px] font-semibold text-ink3 uppercase tracking-wider mb-2">Kategori</div>
+  <div class="flex gap-2 flex-wrap mb-4" id="addrCatGrid"></div>
+  <button class="w-full py-3.5 rounded-xl bg-cyan text-bg font-display text-base font-extrabold cursor-pointer border-none outline-none transition hover:brightness-110" style="box-shadow:0 4px 20px rgba(34,211,238,.25)" onclick="saveAddr()">Gem adresse</button>
+</div>
+
 <!-- ═══════════════════ JAVASCRIPT ═══════════════════ -->
 <script>
 // ════════════════════════════════════════════
@@ -1727,6 +1785,7 @@ function load(){
     if(p.firmaExps)S.firmaExps=p.firmaExps;
     if(p.yearOms)S.yearOms=p.yearOms;
     if(p.customLocations)S.customLocations=p.customLocations;
+    if(p.addresses)S.addresses=p.addresses;
     if(p.rejseOn!==undefined){
       S.rejseOn=p.rejseOn; S.rejseDage=p.rejseDage||0;
       S.rejseDiaetSats=p.rejseDiaetSats||625; S.rejseTransport=p.rejseTransport||0;
@@ -2172,6 +2231,7 @@ function renderDriving(){
   document.getElementById('driveTotalFradrag').textContent=kr(totalFrad);
   const tsEl=document.getElementById('driveTotalSkattebes');if(tsEl)tsEl.textContent='+'+FMT.format(totalSkat)+' kr.';
   const tcEl=document.getElementById('driveTripCount');if(tcEl)tcEl.textContent=trips.length+' kørsler';
+  renderAddrBook();
 }
 
 // Trip modal
@@ -2297,6 +2357,147 @@ function saveFirmaExp(){
   if(editFirmaId!=null)S.firmaExps[editFirmaId]=exp;else S.firmaExps.push(exp);
   closeFirmaModal();renderFirma();save();
 }
+
+// ════════════════════════════════════════════
+// ADRESSEBOG
+// ════════════════════════════════════════════
+const ADDR_CATS = [
+  {id:'hjem',ico:'🏠',lbl:'Hjem'},{id:'venue',ico:'🎤',lbl:'Venue'},
+  {id:'kunde',ico:'🤝',lbl:'Kunde'},{id:'lager',ico:'🏭',lbl:'Lager'},
+  {id:'kontor',ico:'🏢',lbl:'Kontor'},{id:'festival',ico:'🎪',lbl:'Festival'},
+  {id:'hotel',ico:'🏨',lbl:'Hotel'},{id:'andet',ico:'📍',lbl:'Andet'},
+];
+let editAddrId = null, selAddrCat = 'venue';
+
+function getAddrs() { return S.addresses ?? []; }
+
+function renderAddrBook() {
+  const addrs = getAddrs(), list = document.getElementById('addrList'), empty = document.getElementById('addrEmpty');
+  if (!list) return;
+  list.innerHTML = '';
+  if (!addrs.length) { empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  addrs.forEach((a, i) => {
+    const cat = ADDR_CATS.find(c => c.id === a.cat) ?? ADDR_CATS[ADDR_CATS.length - 1];
+    const row = document.createElement('div');
+    row.className = 'flex items-center gap-3 px-5 py-3 hover:bg-white/[.02] transition';
+    row.innerHTML = `
+      <div class="w-9 h-9 rounded-xl bg-white/[.06] flex items-center justify-center text-lg flex-shrink-0">${cat.ico}</div>
+      <div class="flex-1 min-w-0">
+        <div class="text-sm font-semibold text-ink truncate">${a.name}</div>
+        <div class="text-[11px] text-ink3 truncate">${a.address || cat.lbl}</div>
+      </div>
+      <div class="flex gap-1.5 flex-shrink-0">
+        <div onclick="editAddr(${i})" class="gc-btn text-[11px] text-center">Ret</div>
+        <div onclick="deleteAddr(${i})" class="gc-btn text-[11px] text-center !bg-coral/10 !border-coral/20 !text-coral2">Slet</div>
+      </div>`;
+    list.appendChild(row);
+  });
+}
+
+function buildAddrCatGrid() {
+  const grid = document.getElementById('addrCatGrid'); if (!grid) return; grid.innerHTML = '';
+  ADDR_CATS.forEach(c => {
+    const btn = document.createElement('div');
+    btn.className = 'pill text-xs flex flex-col items-center gap-1 !px-2 !py-2 min-w-[56px]' + (selAddrCat === c.id ? ' active' : '');
+    btn.innerHTML = `<span class="text-lg">${c.ico}</span><span class="text-[10px] font-semibold leading-tight text-center">${c.lbl}</span>`;
+    btn.onclick = () => { selAddrCat = c.id; buildAddrCatGrid(); };
+    grid.appendChild(btn);
+  });
+}
+
+function openAddrModal() {
+  editAddrId = null; selAddrCat = 'venue';
+  document.getElementById('addrModalTitle').textContent = 'Ny adresse';
+  document.getElementById('addrName').value = '';
+  document.getElementById('addrAddress').value = '';
+  buildAddrCatGrid();
+  document.getElementById('addrOverlay').classList.add('open');
+  document.getElementById('addrModal').classList.add('open');
+}
+
+function editAddr(i) {
+  const a = getAddrs()[i]; if (!a) return;
+  editAddrId = i; selAddrCat = a.cat || 'andet';
+  document.getElementById('addrModalTitle').textContent = 'Rediger adresse';
+  document.getElementById('addrName').value = a.name || '';
+  document.getElementById('addrAddress').value = a.address || '';
+  buildAddrCatGrid();
+  document.getElementById('addrOverlay').classList.add('open');
+  document.getElementById('addrModal').classList.add('open');
+}
+
+function closeAddrModal() {
+  document.getElementById('addrOverlay').classList.remove('open');
+  document.getElementById('addrModal').classList.remove('open');
+}
+
+function saveAddr() {
+  const name = document.getElementById('addrName').value.trim();
+  const address = document.getElementById('addrAddress').value.trim();
+  if (!name) { document.getElementById('addrName').focus(); return; }
+  const addr = { name, address, cat: selAddrCat };
+  if (!S.addresses) S.addresses = [];
+  if (editAddrId != null) S.addresses[editAddrId] = addr;
+  else S.addresses.push(addr);
+  closeAddrModal(); renderAddrBook(); save();
+}
+
+function deleteAddr(i) {
+  S.addresses = (S.addresses || []).filter((_, idx) => idx !== i);
+  renderAddrBook(); save();
+}
+
+// ── Address dropdown in trip modal ──
+function showAddrDropdown(fieldId) {
+  const addrs = getAddrs();
+  if (!addrs.length) return;
+  const dd = document.getElementById(fieldId + 'Dropdown');
+  buildAddrDropdownItems(dd, fieldId, '');
+  dd.classList.remove('hidden');
+}
+
+function filterAddrDropdown(fieldId) {
+  const dd = document.getElementById(fieldId + 'Dropdown');
+  const query = document.getElementById(fieldId).value.toLowerCase();
+  buildAddrDropdownItems(dd, fieldId, query);
+  if (dd.children.length) dd.classList.remove('hidden');
+  else dd.classList.add('hidden');
+}
+
+function buildAddrDropdownItems(dd, fieldId, query) {
+  const addrs = getAddrs();
+  dd.innerHTML = '';
+  const filtered = addrs.filter(a =>
+    !query || a.name.toLowerCase().includes(query) || (a.address && a.address.toLowerCase().includes(query))
+  );
+  filtered.forEach(a => {
+    const cat = ADDR_CATS.find(c => c.id === a.cat) ?? ADDR_CATS[ADDR_CATS.length - 1];
+    const item = document.createElement('div');
+    item.className = 'addr-dd-item';
+    item.innerHTML = `<span class="addr-ico">${cat.ico}</span><div><div class="addr-name">${a.name}</div>${a.address ? '<div class="addr-sub">' + a.address + '</div>' : ''}</div>`;
+    item.onmousedown = (e) => {
+      e.preventDefault(); // Prevent blur before we set value
+      document.getElementById(fieldId).value = a.address || a.name;
+      dd.classList.add('hidden');
+    };
+    dd.appendChild(item);
+  });
+  if (!filtered.length) dd.classList.add('hidden');
+}
+
+// Close dropdowns on blur
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#tFrom') && !e.target.closest('#tFromDropdown'))
+    document.getElementById('tFromDropdown')?.classList.add('hidden');
+  if (!e.target.closest('#tTo') && !e.target.closest('#tToDropdown'))
+    document.getElementById('tToDropdown')?.classList.add('hidden');
+});
+
+// Also close on Escape
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeAddrModal(); }
+});
 
 // ════════════════════════════════════════════
 // RENDER ALL
@@ -3017,7 +3218,7 @@ setTimeout(()=>{document.getElementById('splash').classList.add('out');setTimeou
 
 // Keyboard shortcut: Escape to close modals
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){closeTripModal();closeGoalModal();closeFirmaModal();}
+  if(e.key==='Escape'){closeTripModal();closeGoalModal();closeFirmaModal();closeAddrModal();}
 });
 
 // ════════════════════════════════════════════
